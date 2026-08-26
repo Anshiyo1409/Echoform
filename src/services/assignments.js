@@ -1,0 +1,73 @@
+import { getItem, setItem, KEYS } from './storage';
+import { getTeams } from './teams';
+import { getSounds } from './sounds';
+import { getContexts } from './contexts';
+import { generateRandomAssignments } from '../utils/randomizer';
+
+export function getAssignments() {
+  return getItem(KEYS.ASSIGNMENTS) || [];
+}
+
+export function getAssignmentByTeamId(teamId) {
+  const assignments = getAssignments();
+  const soundList = getSounds();
+  const contextList = getContexts();
+
+  const asg = assignments.find(a => a.teamId === teamId);
+  if (!asg) return null;
+
+  const sound = soundList.find(s => s.id === asg.soundId);
+  const context = contextList.find(c => c.id === asg.contextId);
+
+  return {
+    ...asg,
+    sound,
+    context
+  };
+}
+
+export function markAssignmentRevealed(teamId) {
+  const assignments = getAssignments();
+  const index = assignments.findIndex(a => a.teamId === teamId);
+  if (index !== -1) {
+    assignments[index].revealed = true;
+    assignments[index].revealedAt = new Date().toISOString();
+    setItem(KEYS.ASSIGNMENTS, assignments);
+    return assignments[index];
+  }
+  return null;
+}
+
+export function generateAndSaveAssignments() {
+  const teams = getTeams();
+  const sounds = getSounds();
+  const contexts = getContexts();
+
+  const newAssignments = generateRandomAssignments(teams, sounds, contexts);
+  setItem(KEYS.ASSIGNMENTS, newAssignments);
+  return newAssignments;
+}
+
+export function updateSingleAssignment(teamId, soundId, contextId) {
+  const assignments = getAssignments();
+  const index = assignments.findIndex(a => a.teamId === teamId);
+  if (index !== -1) {
+    assignments[index] = {
+      ...assignments[index],
+      soundId,
+      contextId
+    };
+  } else {
+    assignments.push({
+      id: `asg-${teamId}`,
+      teamId,
+      soundId,
+      contextId,
+      revealed: false,
+      revealedAt: null,
+      assignedAt: new Date().toISOString()
+    });
+  }
+  setItem(KEYS.ASSIGNMENTS, assignments);
+  return assignments;
+}
