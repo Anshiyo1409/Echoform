@@ -1,105 +1,152 @@
-import React from 'react';
-import { Headphones, Target, Sparkles, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, Pause, Headphones, Target, Dna, ArrowRight } from 'lucide-react';
+import AudioWaveformCanvas from './AudioWaveformCanvas';
+import { playSynthSound, stopSynthSound } from '../audio/soundSynth';
 
 export default function ChallengeCard({ sound, context, team, interactive = false, isAdmin = false, onAction }) {
-  const soundName = isAdmin ? (sound?.name || 'Rain + Traffic') : 'Mystery Audio Track 🎧';
-  const soundDesc = isAdmin ? (sound?.description || 'Heavy rain with distant traffic ambient noise') : 'Audio title is intentionally hidden — play and listen to the audio track to interpret the soundscape.';
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Format team id cleanly (e.g., EF-007 -> TEAM 07, 07 -> TEAM 07, EF-001 -> TEAM 01)
+  const rawId = team?.id || '07';
+  const teamNumber = rawId.replace(/^EF-0*/, '').replace(/^EF-/, '') || rawId;
+  const teamLabel = `TEAM ${teamNumber.padStart(2, '0')}`;
+
+  const soundTitle = isAdmin ? (sound?.name || 'CLASSIFIED') : 'CLASSIFIED';
   const contextName = context?.name || 'Café';
-  const contextIcon = context?.icon || '☕';
-  const contextDesc = context?.description || 'Artisanal coffee house or ordering app experience';
+  const contextExperience = `${contextName.toUpperCase()} EXPERIENCE`;
+  const designDna = context?.designDna || sound?.designDna || 'SONIC TEXTURE';
+  const synthType = sound?.synthType || sound?.name || 'Rain + Traffic';
+
+  const toggleAudio = () => {
+    if (isPlaying) {
+      stopSynthSound();
+      setIsPlaying(false);
+    } else {
+      playSynthSound(synthType, 0.8);
+      setIsPlaying(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopSynthSound();
+    };
+  }, []);
 
   return (
-    <div className="w-full bg-gradient-to-br from-dark-900 via-dark-850 to-dark-900 border border-dark-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
+    <div className="w-full bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900 border-2 border-cyber-cyan/40 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6 backdrop-blur-xl group">
       
-      {/* Subtle Background Glow Spheres */}
-      <div className="absolute -top-20 -left-20 w-56 h-56 bg-cyber-cyan/10 rounded-full blur-3xl group-hover:bg-cyber-cyan/20 transition-all duration-500"></div>
-      <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-cyber-purple/10 rounded-full blur-3xl group-hover:bg-cyber-purple/20 transition-all duration-500"></div>
+      {/* Background Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-tr from-cyber-cyan/10 via-cyber-purple/15 to-cyber-pink/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="relative z-10">
-        
-        {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-dark-800 pb-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-ping"></span>
-            <span className="text-xs font-mono tracking-widest text-cyber-cyan uppercase font-bold">
-              ASSIGNED ECHOFORM
-            </span>
-          </div>
-          {team && (
-            <span className="text-xs font-mono text-slate-400 bg-dark-950 px-3 py-1 rounded-full border border-dark-800">
-              Team: <strong className="text-white">{team.id}</strong> ({team.teamName})
-            </span>
-          )}
+      {/* TOP HEADER */}
+      <div className="space-y-3 relative z-10">
+        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-dark-950 border border-cyber-cyan/50 text-cyber-cyan font-mono text-sm sm:text-base tracking-widest uppercase font-black shadow-lg shadow-cyber-cyan/10">
+          <span>🔐</span>
+          <span>ECHOFORM // {teamLabel}</span>
         </div>
 
-        {/* Pair Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mb-6">
-          
-          {/* Sound Card */}
-          <div className="bg-dark-950/80 border border-cyber-cyan/30 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden hover:border-cyber-cyan/60 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/40 flex items-center justify-center text-cyber-cyan shrink-0">
-                <Headphones className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="text-[11px] font-mono tracking-wider text-cyber-cyan/80 uppercase">
-                  VARIABLE 1 — SOUND 🎧
-                </span>
-                <h4 className="font-outfit font-black text-xl text-white mt-1">
-                  {soundName}
-                </h4>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed font-mono">
-                  {soundDesc}
-                </p>
-              </div>
-            </div>
-          </div>
+        <p className="text-xs sm:text-sm font-mono tracking-widest text-slate-300 uppercase font-bold pt-2">
+          YOUR CREATIVE SIGNAL HAS BEEN RECEIVED
+        </p>
+      </div>
 
-          {/* Context Card */}
-          <div className="bg-dark-950/80 border border-cyber-pink/30 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden hover:border-cyber-pink/60 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cyber-pink/10 border border-cyber-pink/40 flex items-center justify-center text-2xl shrink-0">
-                {contextIcon}
-              </div>
-              <div>
-                <span className="text-[11px] font-mono tracking-wider text-cyber-pink/80 uppercase">
-                  VARIABLE 2 — CONTEXT 🎯
-                </span>
-                <h4 className="font-outfit font-black text-xl text-white mt-1">
-                  {contextName}
-                </h4>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed font-mono">
-                  {contextDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-
+      {/* SECTION 1: AUDIO */}
+      <div className="bg-dark-950/90 border border-cyber-cyan/40 rounded-2xl p-6 space-y-4 relative z-10 max-w-md mx-auto hover:border-cyber-cyan/70 transition-colors shadow-lg shadow-cyber-cyan/5">
+        <div className="flex items-center justify-center gap-2 text-cyber-cyan font-mono font-bold text-sm tracking-wider uppercase">
+          <Headphones className="w-4 h-4" />
+          <span>🎧 AUDIO</span>
         </div>
 
-        {/* Combined Brief Banner */}
-        <div className="bg-gradient-to-r from-cyber-cyan/10 via-cyber-purple/10 to-cyber-pink/10 border border-cyber-purple/30 rounded-2xl p-5 text-center">
-          <p className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-1">
-            THE CREATIVE DIRECTIVE
-          </p>
-          <p className="font-outfit font-bold text-base sm:text-lg text-white">
-            "Design an experience for <span className="text-cyber-pink">{contextName}</span> inspired by what you hear in your assigned audio player."
-          </p>
+        <div className="font-outfit font-black text-2xl sm:text-3xl tracking-widest text-white uppercase">
+          {soundTitle}
         </div>
 
-        {interactive && onAction && (
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={onAction}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-cyber-cyan/20 hover:scale-105 transition-transform"
-            >
-              Start Challenge Experience
-              <ArrowRight className="w-4 h-4" />
-            </button>
+        {/* PLAY SOUND BUTTON */}
+        <div className="pt-1">
+          <button
+            onClick={toggleAudio}
+            className={`w-full py-3.5 px-6 rounded-xl font-outfit font-black text-sm sm:text-base tracking-wider flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl ${
+              isPlaying
+                ? 'bg-cyber-pink text-white shadow-cyber-pink/30 hover:scale-105'
+                : 'bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-pink text-dark-950 shadow-cyber-cyan/30 hover:scale-105'
+            }`}
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="w-5 h-5 fill-current animate-pulse" />
+                <span>[ ⏸️ PAUSE SOUND ]</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 fill-current" />
+                <span>[ 🔊 PLAY SOUND ]</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {isPlaying && (
+          <div className="pt-2">
+            <AudioWaveformCanvas isPlaying={true} height={60} />
           </div>
         )}
-
       </div>
+
+      {/* DOWN ARROW 1 */}
+      <div className="flex justify-center relative z-10">
+        <span className="text-cyber-cyan text-3xl font-mono animate-bounce font-bold">↓</span>
+      </div>
+
+      {/* SECTION 2: CONTEXT */}
+      <div className="bg-dark-950/90 border border-cyber-pink/40 rounded-2xl p-6 space-y-3 relative z-10 max-w-md mx-auto hover:border-cyber-pink/70 transition-colors shadow-lg shadow-cyber-pink/5">
+        <div className="flex items-center justify-center gap-2 text-cyber-pink font-mono font-bold text-sm tracking-wider uppercase">
+          <Target className="w-4 h-4" />
+          <span>🎯 CONTEXT</span>
+        </div>
+
+        <div className="font-outfit font-black text-2xl sm:text-3xl tracking-wide text-white uppercase">
+          {contextExperience}
+        </div>
+      </div>
+
+      {/* DOWN ARROW 2 */}
+      <div className="flex justify-center relative z-10">
+        <span className="text-cyber-pink text-3xl font-mono animate-bounce font-bold">↓</span>
+      </div>
+
+      {/* SECTION 3: DESIGN DNA */}
+      <div className="bg-dark-950/90 border border-cyber-purple/40 rounded-2xl p-6 space-y-3 relative z-10 max-w-md mx-auto hover:border-cyber-purple/70 transition-colors shadow-lg shadow-cyber-purple/5">
+        <div className="flex items-center justify-center gap-2 text-cyber-purple font-mono font-bold text-sm tracking-wider uppercase">
+          <Dna className="w-4 h-4" />
+          <span>🧬 DESIGN DNA</span>
+        </div>
+
+        <div className="font-outfit font-black text-2xl sm:text-3xl tracking-wide text-white uppercase">
+          {designDna}
+        </div>
+      </div>
+
+      {/* FOOTER TAGLINE */}
+      <div className="pt-4 border-t border-dark-800/80 relative z-10">
+        <p className="font-outfit font-bold italic text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-pink tracking-wide">
+          Make the invisible audible.
+        </p>
+      </div>
+
+      {interactive && onAction && (
+        <div className="pt-2 relative z-10 flex justify-center">
+          <button
+            onClick={onAction}
+            className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-outfit font-black text-sm flex items-center gap-2 shadow-lg shadow-cyber-cyan/20 hover:scale-105 transition-transform"
+          >
+            Enter Challenge Experience
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
+

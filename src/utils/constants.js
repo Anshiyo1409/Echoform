@@ -30,16 +30,16 @@ export const INITIAL_SOUNDS = [
 ];
 
 export const INITIAL_CONTEXTS = [
-  { id: 'ctx-01', name: 'Café', icon: '☕', description: 'Artisanal coffee house, order system, loyalty app, or cozy seating layout.', active: true },
-  { id: 'ctx-02', name: 'E-commerce', icon: '🛒', description: 'Online storefront, flash sale marketplace, product showcase, or checkout funnel.', active: true },
-  { id: 'ctx-03', name: 'Healthcare', icon: '🏥', description: 'Patient portal, wellness tracking dashboard, emergency triage, or tele-health app.', active: true },
-  { id: 'ctx-04', name: 'Education', icon: '🎓', description: 'Interactive learning platform, quiz interface, virtual classroom, or student portal.', active: true },
-  { id: 'ctx-05', name: 'Banking & Fintech', icon: '🏦', description: 'Neobank dashboard, investment tracker, crypto wallet, or money transfer UI.', active: true },
-  { id: 'ctx-06', name: 'Travel & Expeditions', icon: '✈️', description: 'Flight booking hub, itinerary planner, hotel explorer, or travel journal.', active: true },
-  { id: 'ctx-07', name: 'Fitness & Sports', icon: '🏋️', description: 'Workout tracker, gym class booking, biometric dashboard, or habit logger.', active: true },
-  { id: 'ctx-08', name: 'Gaming & Cyber', icon: '🎮', description: 'Esports tournament lobby, game launcher, inventory manager, or guild chat.', active: true },
-  { id: 'ctx-09', name: 'Real Estate', icon: '🏠', description: 'Architectural property viewer, virtual house tour, rental portal, or floor plan app.', active: true },
-  { id: 'ctx-10', name: 'Food Delivery', icon: '🍔', description: 'Rapid delivery tracker, dish customizing menu, chef table reservation, or meal kit app.', active: true },
+  { id: 'ctx-01', name: 'Café', icon: '☕', description: 'Artisanal coffee house, order system, loyalty app, or cozy seating layout.', designDna: 'SONIC TEXTURE', active: true },
+  { id: 'ctx-02', name: 'E-commerce', icon: '🛒', description: 'Online storefront, flash sale marketplace, product showcase, or checkout funnel.', designDna: 'TACTILE RHYTHM', active: true },
+  { id: 'ctx-03', name: 'Healthcare', icon: '🏥', description: 'Patient portal, wellness tracking dashboard, emergency triage, or tele-health app.', designDna: 'ORGANIC PULSE', active: true },
+  { id: 'ctx-04', name: 'Education', icon: '🎓', description: 'Interactive learning platform, quiz interface, virtual classroom, or student portal.', designDna: 'HARMONIC FLOW', active: true },
+  { id: 'ctx-05', name: 'Banking & Fintech', icon: '🏦', description: 'Neobank dashboard, investment tracker, crypto wallet, or money transfer UI.', designDna: 'DIGITAL FREQUENCY', active: true },
+  { id: 'ctx-06', name: 'Travel & Expeditions', icon: '✈️', description: 'Flight booking hub, itinerary planner, hotel explorer, or travel journal.', designDna: 'ACOUSTIC VECTORS', active: true },
+  { id: 'ctx-07', name: 'Fitness & Sports', icon: '🏋️', description: 'Workout tracker, gym class booking, biometric dashboard, or habit logger.', designDna: 'KINETIC RESONANCE', active: true },
+  { id: 'ctx-08', name: 'Gaming & Cyber', icon: '🎮', description: 'Esports tournament lobby, game launcher, inventory manager, or guild chat.', designDna: 'SYNTHETIC ECHO', active: true },
+  { id: 'ctx-09', name: 'Real Estate', icon: '🏠', description: 'Architectural property viewer, virtual house tour, rental portal, or floor plan app.', designDna: 'SPATIAL AMBIENCE', active: true },
+  { id: 'ctx-10', name: 'Food Delivery', icon: '🍔', description: 'Rapid delivery tracker, dish customizing menu, chef table reservation, or meal kit app.', designDna: 'SENSORY VIBRATION', active: true },
 ];
 
 export const INITIAL_GAMEROOMS = [

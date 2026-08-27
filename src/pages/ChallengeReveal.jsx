@@ -5,6 +5,7 @@ import { getAssignmentByTeamId, markAssignmentRevealed } from '../services/assig
 import { Headphones, Target, Sparkles, Radio, ArrowRight, Play, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import AudioWaveformCanvas from '../components/AudioWaveformCanvas';
+import ChallengeCard from '../components/ChallengeCard';
 import { playSynthSound, stopSynthSound } from '../audio/soundSynth';
 
 export default function ChallengeReveal() {
@@ -197,65 +198,19 @@ export default function ChallengeReveal() {
 
         {/* STEP 5: FINAL COMBINED ECHOFORM */}
         {step === 5 && (
-          <div className="bg-dark-900/95 border-2 border-cyber-cyan rounded-3xl p-8 sm:p-12 shadow-2xl backdrop-blur-xl text-center space-y-8 animate-float">
-            
+          <div className="space-y-6 text-center animate-float">
             <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-cyber-emerald/10 border border-cyber-emerald/30 text-cyber-emerald text-xs font-mono font-bold">
               <CheckCircle2 className="w-4 h-4" />
               CHALLENGE OFFICIALLY UNLOCKED
             </div>
 
-            <h2 className="font-outfit font-black text-4xl sm:text-6xl text-white">
-              YOUR ECHOFORM
-            </h2>
-
-            {/* Combined Sound + Context Box */}
-            <div className="bg-dark-950 border border-dark-800 rounded-2xl p-8 space-y-6">
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/40 flex items-center justify-center text-cyber-cyan">
-                    <Headphones className="w-6 h-6" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[10px] font-mono text-cyber-cyan uppercase block">Assigned Sound</span>
-                    <strong className="font-outfit font-bold text-lg text-white">Mystery Audio Track</strong>
-                    <span className="text-[10px] font-mono text-slate-400 block">(Audio Only)</span>
-                  </div>
-                </div>
-
-                <span className="font-outfit font-black text-2xl text-cyber-purple">+</span>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-cyber-pink/10 border border-cyber-pink/40 flex items-center justify-center text-2xl">
-                    {contextIcon}
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[10px] font-mono text-cyber-pink uppercase block">Context</span>
-                    <strong className="font-outfit font-bold text-xl text-white">{contextName}</strong>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="pt-4 border-t border-dark-800">
-                <p className="font-outfit font-black text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-pink">
-                  NOW DESIGN WHAT YOU HEARD FOR {contextName.toUpperCase()}.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="pt-2">
-              <button
-                onClick={() => navigate('/challenge')}
-                className="w-full sm:w-auto px-10 py-4 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-outfit font-black text-lg flex items-center justify-center gap-2 mx-auto shadow-xl shadow-cyber-cyan/30 hover:scale-105 transition-transform"
-              >
-                Enter Challenge Room & Play Audio
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-
+            <ChallengeCard
+              sound={assignment?.sound}
+              context={assignment?.context}
+              team={{ id: teamId }}
+              interactive={true}
+              onAction={() => navigate('/challenge')}
+            />
           </div>
         )}
 
