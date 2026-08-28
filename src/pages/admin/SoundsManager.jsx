@@ -54,7 +54,7 @@ export default function SoundsManager() {
     reader.readAsDataURL(file);
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       setToast({ type: 'error', message: 'Sound Name is required.' });
@@ -71,7 +71,7 @@ export default function SoundsManager() {
       return;
     }
 
-    const created = createSound({
+    const created = await createSound({
       name: formData.name,
       description: formData.description,
       synthType: audioType === 'synth' ? (formData.synthType || formData.name) : null,
@@ -96,13 +96,13 @@ export default function SoundsManager() {
     });
   };
 
-  const handleSaveEdit = (id) => {
+  const handleSaveEdit = async (id) => {
     if (!editFormData.name) {
       setToast({ type: 'error', message: 'Sound Name is required.' });
       return;
     }
 
-    updateSound(id, {
+    await updateSound(id, {
       name: editFormData.name,
       description: editFormData.description,
       synthType: editFormData.synthType,
@@ -126,9 +126,9 @@ export default function SoundsManager() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Delete this sound preset?')) {
-      deleteSound(id);
+      await deleteSound(id);
       if (playingId === id) {
         stopSynthSound();
         setPlayingId(null);
