@@ -14,6 +14,39 @@ export const DEFAULT_EVENT = {
   announcement: 'Welcome to ECHOFORM 2026! Upload your custom audio tracks to map them with contexts and design DNA.'
 };
 
+export const DESIGN_DNA_OPTIONS = [
+  'Texture',
+  'Movement',
+  'Typography',
+  'Color',
+  'Space',
+  'Urgency',
+  'Retro Aesthetic',
+  'Organic Shapes',
+  'Minimalism',
+  'Pixel Language',
+  'Hierarchy',
+  'Contrast',
+  'Atmosphere',
+  'Playfulness',
+  'Negative Space',
+  'Warmth',
+  'Rhythm',
+  'Geometry',
+  'Elegance',
+  'Energy',
+  'Futurism',
+  'Mood',
+  'Storytelling',
+  'Retro-Futurism',
+  'Memory',
+  'Asymmetry',
+  'Scale',
+  'Glow & Contrast',
+  'Surprise',
+  'Mystery'
+];
+
 // Curated Context & Design DNA Presets (Ready for Custom Audio Mapping)
 export const CURATED_CHALLENGES = [
   { id: 'vector-01', contextName: 'Café App', icon: '☕', designDna: 'Texture' },

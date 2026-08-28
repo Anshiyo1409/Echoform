@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getVectorMappings, saveVectorMapping, createVectorMapping, deleteVectorMapping, resetVectorMappingsToDefault } from '../../services/vectorMappings';
-import { getSounds, createMultipleSounds, createSound, deleteAllSounds } from '../../services/sounds';
+import { getSounds, createMultipleSounds, createSound, deleteSound, deleteAllSounds } from '../../services/sounds';
 import { getContexts } from '../../services/contexts';
 import { Headphones, Target, Dna, Upload, Play, Pause, Plus, Trash2, Check, RefreshCw, Layers, Sparkles, Edit3, X, AlertTriangle } from 'lucide-react';
 import { playSynthSound, stopSynthSound } from '../../audio/soundSynth';
 import NotificationToast from '../../components/NotificationToast';
+import { DESIGN_DNA_OPTIONS } from '../../utils/constants';
 
 export default function VectorMappingsManager() {
-  const [mappings, setMappings] = useState(getVectorMappings());
   const [sounds, setSounds] = useState(getSounds());
+  const [mappings, setMappings] = useState(getVectorMappings());
   const contexts = getContexts();
   const [playingId, setPlayingId] = useState(null);
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
@@ -22,6 +23,39 @@ export default function VectorMappingsManager() {
     contextId: contexts[0] ? contexts[0].id : '',
     designDna: 'Texture'
   });
+
+  // Sync sound library with vector mappings list on mount and changes
+  useEffect(() => {
+    syncSoundsAndMappings();
+  }, []);
+
+  const syncSoundsAndMappings = () => {
+    const currentSounds = getSounds();
+    const currentMappings = getVectorMappings();
+    const updatedMappings = [...currentMappings];
+
+    let hasChanges = false;
+    currentSounds.forEach((snd, idx) => {
+      let existingMapping = updatedMappings.find(m => m.soundId === snd.id || m.soundName === snd.name);
+      if (!existingMapping) {
+        const ctx = contexts[idx % contexts.length] || contexts[0];
+        const newMap = createVectorMapping({
+          soundName: snd.name,
+          soundId: snd.id,
+          contextName: ctx ? ctx.name : 'Custom Context',
+          contextId: ctx ? ctx.id : '',
+          designDna: snd.designDna || (ctx ? ctx.designDna : 'Texture'),
+          icon: ctx ? ctx.icon : '🎯',
+          audioUrl: snd.audioUrl
+        });
+        updatedMappings.push(newMap);
+        hasChanges = true;
+      }
+    });
+
+    setSounds(currentSounds);
+    setMappings(hasChanges ? getVectorMappings() : updatedMappings);
+  };
 
   // BULK AUDIO FILE UPLOADER
   const handleBulkUpload = async (e) => {
@@ -67,8 +101,7 @@ export default function VectorMappingsManager() {
 
     if (batchSounds.length > 0) {
       const created = await createMultipleSounds(batchSounds);
-      setSounds(getSounds());
-
+      
       // Auto create vector mappings for newly uploaded sounds
       created.forEach((soundItem, idx) => {
         const ctx = contexts[idx % contexts.length] || contexts[0];
@@ -83,7 +116,7 @@ export default function VectorMappingsManager() {
         });
       });
 
-      setMappings(getVectorMappings());
+      syncSoundsAndMappings();
       setToast({ type: 'success', message: `Successfully uploaded & mapped ${batchSounds.length} audio tracks!` });
     }
 
@@ -154,17 +187,19 @@ export default function VectorMappingsManager() {
       audioUrl: newVector.audioUrl
     });
 
-    setSounds(getSounds());
-    setMappings(getVectorMappings());
+    syncSoundsAndMappings();
     setShowAddForm(false);
     setNewVector({ soundName: '', audioUrl: '', contextId: contexts[0]?.id || '', designDna: 'Texture' });
     setToast({ type: 'success', message: `Created new vector pair for "${createdSound.name}"!` });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this Audio-Context vector pair?')) {
+  const handleDelete = async (id, soundId) => {
+    if (window.confirm('Delete this Audio Track and its Vector Mapping?')) {
       deleteVectorMapping(id);
-      setMappings(getVectorMappings());
+      if (soundId) {
+        await deleteSound(soundId);
+      }
+      syncSoundsAndMappings();
       setToast({ type: 'success', message: 'Vector pair deleted' });
     }
   };
@@ -210,12 +245,12 @@ export default function VectorMappingsManager() {
               </h2>
             </div>
             <p className="text-xs text-slate-400 font-mono mt-1">
-              Upload your audio files and pair each track with a Target Context and Design DNA.
+              Every uploaded audio track is listed below. Map each audio file with a Selectable Target Context and Selectable Design DNA.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {sounds.length > 0 && (
+            {mappings.length > 0 && (
               <button
                 onClick={handleDeleteAll}
                 className="px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-outfit font-bold text-xs flex items-center gap-1.5 hover:bg-rose-500/20 transition-all"
@@ -241,16 +276,16 @@ export default function VectorMappingsManager() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-cyber-purple" />
-              <h3 className="font-outfit font-bold text-base text-white">Upload Your Audio Files (Bulk Upload)</h3>
+              <h3 className="font-outfit font-bold text-base text-white">Upload Audio Files (Bulk Upload)</h3>
             </div>
-            {sounds.length > 0 && (
+            {mappings.length > 0 && (
               <span className="text-xs font-mono text-slate-400">
-                Audios Loaded: <strong className="text-cyber-cyan">{sounds.length}</strong>
+                Uploaded Audio Tracks: <strong className="text-cyber-cyan">{mappings.length}</strong>
               </span>
             )}
           </div>
           <p className="text-xs text-slate-400 font-mono">
-            Select your <code>.mp3</code>, <code>.wav</code>, or <code>.m4a</code> audio files from your computer. Every audio track will be saved directly and listed below for context mapping!
+            Select multiple <code>.mp3</code> or <code>.wav</code> files from your device. Every uploaded audio track will be added below with selectable Context and Design DNA dropdowns!
           </p>
 
           <div className="border-2 border-dashed border-cyber-purple/40 rounded-xl p-6 text-center bg-dark-900/50 hover:bg-cyber-purple/10 transition-all">
@@ -281,7 +316,7 @@ export default function VectorMappingsManager() {
         <form onSubmit={handleCreateNewVector} className="bg-dark-900 border border-cyber-cyan/40 rounded-3xl p-6 shadow-2xl space-y-4">
           <h3 className="font-outfit font-bold text-lg text-white">Upload Audio Track & Map to Context</h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
               <label className="text-[11px] font-mono text-slate-400 mb-1 block">Audio File *</label>
               <label className="px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-cyan/40 text-cyber-cyan text-xs flex items-center justify-between cursor-pointer hover:bg-cyber-cyan/10">
@@ -312,6 +347,19 @@ export default function VectorMappingsManager() {
               >
                 {contexts.map(c => (
                   <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-mono text-cyber-purple font-bold mb-1 block">Design DNA</label>
+              <select
+                value={newVector.designDna}
+                onChange={(e) => setNewVector({ ...newVector, designDna: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-purple/50 text-xs text-cyber-purple font-mono font-bold focus:border-cyber-purple outline-none"
+              >
+                {DESIGN_DNA_OPTIONS.map(dna => (
+                  <option key={dna} value={dna}>{dna}</option>
                 ))}
               </select>
             </div>
@@ -348,9 +396,9 @@ export default function VectorMappingsManager() {
         {mappings.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <Headphones className="w-12 h-12 text-slate-600 mx-auto" />
-            <h4 className="font-outfit font-bold text-white text-lg">No Custom Audios Uploaded Yet</h4>
+            <h4 className="font-outfit font-bold text-white text-lg">No Audios Uploaded Yet</h4>
             <p className="text-xs text-slate-400 font-mono max-w-md mx-auto">
-              Use the bulk upload box above to select your audio files (.mp3, .wav). Once uploaded, you can map each audio track to a Target Context and Design DNA!
+              Use the bulk upload box above to select your audio files (.mp3, .wav). Once uploaded, ALL your audio tracks will appear here with selectable Context and Design DNA dropdowns!
             </p>
           </div>
         ) : (
@@ -360,8 +408,8 @@ export default function VectorMappingsManager() {
                 <tr>
                   <th className="px-6 py-4">#</th>
                   <th className="px-6 py-4">🎧 Uploaded Audio Track</th>
-                  <th className="px-6 py-4">🎯 Target Context</th>
-                  <th className="px-6 py-4">🧬 Design DNA</th>
+                  <th className="px-6 py-4">🎯 Selectable Context</th>
+                  <th className="px-6 py-4">🧬 Selectable Design DNA</th>
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -398,12 +446,12 @@ export default function VectorMappingsManager() {
                         </div>
                       </td>
 
-                      {/* TARGET CONTEXT SELECTOR */}
+                      {/* SELECTABLE TARGET CONTEXT DROPDOWN */}
                       <td className="px-6 py-4">
                         <select
                           value={item.contextId || ''}
                           onChange={(e) => handleUpdateMapping(item.id, 'contextId', e.target.value)}
-                          className="px-3.5 py-2 rounded-xl bg-dark-950 border border-dark-800 text-xs text-white font-mono font-bold focus:border-cyber-pink outline-none"
+                          className="px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-pink/40 text-xs text-white font-mono font-bold focus:border-cyber-pink outline-none cursor-pointer hover:border-cyber-pink"
                         >
                           {contexts.map(c => (
                             <option key={c.id} value={c.id}>
@@ -413,22 +461,43 @@ export default function VectorMappingsManager() {
                         </select>
                       </td>
 
-                      {/* DESIGN DNA INPUT */}
+                      {/* SELECTABLE DESIGN DNA DROPDOWN + CUSTOM INPUT */}
                       <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          value={item.designDna || ''}
-                          onChange={(e) => handleUpdateMapping(item.id, 'designDna', e.target.value)}
-                          className="px-3 py-1.5 rounded-lg bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-xs font-bold uppercase focus:border-cyber-purple outline-none"
-                        />
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={DESIGN_DNA_OPTIONS.includes(item.designDna) ? item.designDna : 'CUSTOM'}
+                            onChange={(e) => {
+                              if (e.target.value !== 'CUSTOM') {
+                                handleUpdateMapping(item.id, 'designDna', e.target.value);
+                              }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-xs font-bold uppercase focus:border-cyber-purple outline-none cursor-pointer"
+                          >
+                            {DESIGN_DNA_OPTIONS.map(dna => (
+                              <option key={dna} value={dna}>{dna}</option>
+                            ))}
+                            {!DESIGN_DNA_OPTIONS.includes(item.designDna) && (
+                              <option value="CUSTOM">Custom: {item.designDna}</option>
+                            )}
+                          </select>
+
+                          <input
+                            type="text"
+                            value={item.designDna || ''}
+                            onChange={(e) => handleUpdateMapping(item.id, 'designDna', e.target.value)}
+                            placeholder="Custom DNA..."
+                            className="w-32 px-3 py-2 rounded-xl bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-xs font-bold uppercase focus:border-cyber-purple outline-none"
+                            title="Edit or type custom Design DNA"
+                          />
+                        </div>
                       </td>
 
                       {/* ACTIONS */}
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => handleDelete(item.id, item.soundId)}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 transition-colors"
-                          title="Delete Vector Mapping"
+                          title="Delete Vector Mapping & Audio"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

@@ -87,9 +87,22 @@ export default function SoundsManager() {
     }
 
     if (batchSounds.length > 0) {
-      await createMultipleSounds(batchSounds);
+      const createdList = await createMultipleSounds(batchSounds);
+      const contextsList = getContexts();
+      createdList.forEach((soundItem, idx) => {
+        const ctx = contextsList[idx % contextsList.length] || contextsList[0];
+        createVectorMapping({
+          soundName: soundItem.name,
+          soundId: soundItem.id,
+          contextName: ctx ? ctx.name : 'Custom Context',
+          contextId: ctx ? ctx.id : '',
+          designDna: ctx ? (ctx.designDna || 'Texture') : 'Texture',
+          icon: ctx ? ctx.icon : '🎯',
+          audioUrl: soundItem.audioUrl
+        });
+      });
       setSounds(getSounds());
-      setToast({ type: 'success', message: `Successfully batch uploaded ${batchSounds.length} audio tracks!` });
+      setToast({ type: 'success', message: `Successfully batch uploaded & mapped ${batchSounds.length} audio tracks!` });
     }
 
     setIsProcessingBulk(false);
@@ -144,6 +157,18 @@ export default function SoundsManager() {
       synthType: audioType === 'synth' ? (formData.synthType || formData.name) : null,
       audioUrl: audioType !== 'synth' ? formData.audioUrl : '',
       designDna: formData.designDna || null
+    });
+
+    const contextsList = getContexts();
+    const ctx = contextsList[0];
+    createVectorMapping({
+      soundName: created.name,
+      soundId: created.id,
+      contextName: ctx ? ctx.name : 'Custom Context',
+      contextId: ctx ? ctx.id : '',
+      designDna: formData.designDna || (ctx ? ctx.designDna : 'Texture'),
+      icon: ctx ? ctx.icon : '🎯',
+      audioUrl: created.audioUrl
     });
 
     setSounds(getSounds());
