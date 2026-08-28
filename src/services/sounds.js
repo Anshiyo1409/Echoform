@@ -60,6 +60,41 @@ export async function createSound(soundData) {
   };
 }
 
+export async function createMultipleSounds(soundsList) {
+  const existingSounds = getSounds();
+  const createdList = [];
+
+  for (let i = 0; i < soundsList.length; i++) {
+    const item = soundsList[i];
+    const soundId = `snd-${Date.now()}-${i}`;
+    const rawAudioUrl = item.audioUrl || '';
+    const isBase64 = rawAudioUrl.startsWith('data:audio/');
+
+    if (isBase64) {
+      await saveAudioToDB(soundId, rawAudioUrl);
+    }
+
+    const newSound = {
+      id: soundId,
+      name: item.name,
+      description: item.description || `Batch uploaded custom audio track #${i + 1}`,
+      audioUrl: isBase64 ? `[IDB]:${soundId}` : rawAudioUrl,
+      synthType: item.synthType || item.name,
+      designDna: item.designDna || null,
+      isCustom: true,
+      hasIdbAudio: isBase64,
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+
+    existingSounds.push(newSound);
+    createdList.push({ ...newSound, audioUrl: rawAudioUrl });
+  }
+
+  setItem(KEYS.SOUNDS, existingSounds);
+  return createdList;
+}
+
 export async function updateSound(soundId, updateData) {
   const sounds = getSounds();
   const index = sounds.findIndex(s => s.id === soundId);

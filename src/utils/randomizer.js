@@ -1,4 +1,5 @@
 // ECHOFORM Challenge Randomization Engine
+import { CURATED_CHALLENGES } from './constants';
 
 /**
  * Fisher-Yates shuffle algorithm
@@ -14,47 +15,39 @@ function shuffleArray(array) {
 
 /**
  * Generates assignments ensuring:
- * 1. Unique sound per team (or looped if teams > sounds)
- * 2. Balanced context distribution (equal allocation of contexts across teams)
+ * 1. Each team receives a unique curated challenge vector (Sound + Context + Design DNA)
+ * 2. Vector pairs follow the 30 ECHOFORM rules
  */
 export function generateRandomAssignments(teams = [], sounds = [], contexts = []) {
-  const activeSounds = sounds.filter(s => s.active !== false);
-  const activeContexts = contexts.filter(c => c.active !== false);
-
-  if (teams.length === 0 || activeSounds.length === 0 || activeContexts.length === 0) {
+  if (teams.length === 0) {
     return [];
   }
 
-  // Shuffle active sounds
-  const shuffledSounds = shuffleArray(activeSounds);
-  
-  // Create balanced pool of contexts
-  const contextPool = [];
-  const minPerContext = Math.floor(teams.length / activeContexts.length);
-  const remainder = teams.length % activeContexts.length;
-
-  const shuffledContexts = shuffleArray(activeContexts);
-
-  shuffledContexts.forEach((ctx, idx) => {
-    const count = minPerContext + (idx < remainder ? 1 : 0);
-    for (let c = 0; c < count; c++) {
-      contextPool.push(ctx);
-    }
-  });
-
-  // Final shuffle of context pool to randomize order across teams
-  const finalContexts = shuffleArray(contextPool);
+  // Shuffle available 30 curated challenge vectors
+  const shuffledVectors = shuffleArray(CURATED_CHALLENGES);
 
   const assignments = teams.map((team, index) => {
-    // Pick unique sound (cycle if more teams than sounds)
-    const sound = shuffledSounds[index % shuffledSounds.length];
-    const context = finalContexts[index];
+    const vector = shuffledVectors[index % shuffledVectors.length];
+    
+    // Find matching sound & context in active list or fallback to index matching
+    const soundMatch = sounds.find(s => s.name === vector.soundName || s.synthType === vector.synthType) || sounds[index % (sounds.length || 1)] || { id: `snd-${index}` };
+    const contextMatch = contexts.find(c => c.name === vector.contextName) || contexts[index % (contexts.length || 1)] || { id: `ctx-${index}` };
 
     return {
       id: `asg-${team.id}`,
       teamId: team.id,
-      soundId: sound.id,
-      contextId: context.id,
+      soundId: soundMatch.id,
+      contextId: contextMatch.id,
+      customDesignDna: vector.designDna,
+      customSound: soundMatch.audioUrl ? null : {
+        name: vector.soundName,
+        synthType: vector.synthType
+      },
+      customContext: {
+        name: vector.contextName,
+        icon: vector.icon,
+        description: `Target application context: ${vector.contextName} emphasizing ${vector.designDna}.`
+      },
       revealed: false,
       revealedAt: null,
       assignedAt: new Date().toISOString()

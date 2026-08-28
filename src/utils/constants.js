@@ -11,36 +11,61 @@ export const DEFAULT_EVENT = {
   status: 'LIVE', // 'UPCOMING' | 'LIVE' | 'ENDED'
   assignmentLocked: false,
   submissionOpen: true,
-  announcement: 'Welcome to ECHOFORM 2026! Random challenge assignments are now generated. Log in to reveal your challenge.'
+  announcement: 'Welcome to ECHOFORM 2026! 30 curated design vectors are loaded. Log in to reveal your challenge assignment.'
 };
 
-export const INITIAL_SOUNDS = [
-  { id: 'snd-01', name: 'Rain + Traffic', description: 'Continuous steady downpour mixed with distant urban vehicle hums.', audioUrl: '', synthType: 'Rain + Traffic', active: true },
-  { id: 'snd-02', name: 'Thunderstorm', description: 'Deep reverberating thunder rumbles with sudden electrical strikes.', audioUrl: '', synthType: 'Thunderstorm', active: true },
-  { id: 'snd-03', name: 'Ocean Waves', description: 'Rhythmic sea waves swelling and crashing gently along a pebble shore.', audioUrl: '', synthType: 'Ocean Waves', active: true },
-  { id: 'snd-04', name: 'Coffee Shop Ambience', description: 'Muffled chatter, espresso machine steam hiss, and clinking ceramic cups.', audioUrl: '', synthType: 'Coffee Shop Ambience', active: true },
-  { id: 'snd-05', name: 'Railway Station', description: 'Echoing station announcements, metallic train track clicks, and departing locomotives.', audioUrl: '', synthType: 'Railway Station', active: true },
-  { id: 'snd-06', name: 'Clock Ticking', description: 'Subtle, mechanical pendulum ticking in a quiet room.', audioUrl: '', synthType: 'Clock Ticking', active: true },
-  { id: 'snd-07', name: 'Keyboard Typing', description: 'Fast tactile mechanical switch keystrokes with spacebar thuds.', audioUrl: '', synthType: 'Keyboard Typing', active: true },
-  { id: 'snd-08', name: 'Cyberpunk Neon City', description: 'Deep analog synth pad with glowing neon frequency shimmers.', audioUrl: '', synthType: 'Cyberpunk Neon City', active: true },
-  { id: 'snd-09', name: 'Busy Market', description: 'Vibrant street vendor calls, bustling crowds, and ambient footsteps.', audioUrl: '', synthType: 'Busy Market', active: true },
-  { id: 'snd-10', name: 'Forest & Birds', description: 'Gentle canopy wind rustle with wild songbird chirps.', audioUrl: '', synthType: 'Forest & Birds', active: true },
-  { id: 'snd-11', name: 'Space Station Ambient', description: 'Low sub-bass air circulation drone with cosmic telemetry pulses.', audioUrl: '', synthType: 'Space Station Ambient', active: true },
-  { id: 'snd-12', name: 'Heavy Rain', description: 'Torrential rain pounding against glass windows.', audioUrl: '', synthType: 'Heavy Rain', active: true },
+// Curated 30 Challenge Vectors as specified by ECHOFORM rules
+export const CURATED_CHALLENGES = [
+  { id: 'vector-01', soundName: '🌧️ Rain on a metal roof', contextName: 'Café App', icon: '☕', designDna: 'Texture', synthType: 'Rain + Traffic' },
+  { id: 'vector-02', soundName: '🚆 Train journey ambience + rhythmic beat', contextName: 'Travel Booking', icon: '🚆', designDna: 'Movement', synthType: 'Railway Station' },
+  { id: 'vector-03', soundName: '🎠 Dreamy music-box melody', contextName: 'Banking App', icon: '🏦', designDna: 'Typography', synthType: 'Clock Ticking' },
+  { id: 'vector-04', soundName: '⚡ Glitchy electronic pulses', contextName: 'Café App', icon: '☕', designDna: 'Color', synthType: 'Cyberpunk Neon City' },
+  { id: 'vector-05', soundName: '🌊 Ocean waves + ambient music', contextName: 'Productivity App', icon: '📊', designDna: 'Space', synthType: 'Ocean Waves' },
+  { id: 'vector-06', soundName: '💓 Heartbeat + cinematic pulse', contextName: 'Food Delivery', icon: '🍕', designDna: 'Urgency', synthType: 'Thunderstorm' },
+  { id: 'vector-07', soundName: '📻 Vintage radio + jazz', contextName: 'Social Media', icon: '📻', designDna: 'Retro Aesthetic', synthType: 'Coffee Shop Ambience' },
+  { id: 'vector-08', soundName: '🌲 Forest ambience + soft piano', contextName: 'Dating App', icon: '🌲', designDna: 'Organic Shapes', synthType: 'Forest & Birds' },
+  { id: 'vector-09', soundName: '🏙️ Busy city + traffic rhythm', contextName: 'Meditation App', icon: '🧘', designDna: 'Minimalism', synthType: 'Rain + Traffic' },
+  { id: 'vector-10', soundName: '🎮 8-bit game music', contextName: 'Fitness App', icon: '🎮', designDna: 'Pixel Language', synthType: 'Cyberpunk Neon City' },
+  { id: 'vector-11', soundName: '☕ Café chatter + cups + soft jazz', contextName: 'E-commerce', icon: '🛒', designDna: 'Hierarchy', synthType: 'Coffee Shop Ambience' },
+  { id: 'vector-12', soundName: '🚨 Siren-like cinematic sound', contextName: 'Event Discovery', icon: '🎟️', designDna: 'Contrast', synthType: 'Railway Station' },
+  { id: 'vector-13', soundName: '🌌 Ethereal ambient vocals', contextName: 'Navigation App', icon: '🧭', designDna: 'Atmosphere', synthType: 'Space Station Ambient' },
+  { id: 'vector-14', soundName: '🪩 Funk / disco groove', contextName: 'Education Platform', icon: '🎓', designDna: 'Playfulness', synthType: 'Busy Market' },
+  { id: 'vector-15', soundName: '🌙 Slow dark ambient', contextName: 'Sleep App', icon: '🌙', designDna: 'Negative Space', synthType: 'Space Station Ambient' },
+  { id: 'vector-16', soundName: '🏖️ Upbeat summer indie', contextName: 'Finance App', icon: '💳', designDna: 'Warmth', synthType: 'Ocean Waves' },
+  { id: 'vector-17', soundName: '🕰️ Clock ticking + piano', contextName: 'Food Ordering', icon: '🍔', designDna: 'Rhythm', synthType: 'Clock Ticking' },
+  { id: 'vector-18', soundName: '🔧 Mechanical clicks + industrial beat', contextName: 'Fashion Store', icon: '👗', designDna: 'Geometry', synthType: 'Keyboard Typing' },
+  { id: 'vector-19', soundName: '🎷 Smooth saxophone / lounge music', contextName: 'Smart Home', icon: '🏠', designDna: 'Elegance', synthType: 'Coffee Shop Ambience' },
+  { id: 'vector-20', soundName: '🔥 Fast cinematic percussion', contextName: 'Library App', icon: '📚', designDna: 'Energy', synthType: 'Busy Market' },
+  { id: 'vector-21', soundName: '🛸 Futuristic synthwave', contextName: 'Healthcare Dashboard', icon: '🏥', designDna: 'Futurism', synthType: 'Cyberpunk Neon City' },
+  { id: 'vector-22', soundName: '🌧️ Thunderstorm + atmospheric music', contextName: 'Travel App', icon: '✈️', designDna: 'Mood', synthType: 'Thunderstorm' },
+  { id: 'vector-23', soundName: '🎹 Emotional piano', contextName: 'Food Delivery', icon: '🍱', designDna: 'Storytelling', synthType: 'Clock Ticking' },
+  { id: 'vector-24', soundName: '💿 80s synthwave', contextName: 'Real Estate App', icon: '🏢', designDna: 'Retro-Futurism', synthType: 'Cyberpunk Neon City' },
+  { id: 'vector-25', soundName: '🧸 Gentle nostalgic melody', contextName: 'Social Media', icon: '💬', designDna: 'Memory', synthType: 'Forest & Birds' },
+  { id: 'vector-26', soundName: '🧪 Strange experimental electronic', contextName: 'E-commerce', icon: '🛍️', designDna: 'Asymmetry', synthType: 'Space Station Ambient' },
+  { id: 'vector-27', soundName: '🚀 Epic orchestral build', contextName: 'Public Transport', icon: '🚌', designDna: 'Scale', synthType: 'Railway Station' },
+  { id: 'vector-28', soundName: '🌃 Neon city ambience + bass', contextName: 'Night Café', icon: '🌙', designDna: 'Glow & Contrast', synthType: 'Cyberpunk Neon City' },
+  { id: 'vector-29', soundName: '🎪 Quirky circus / playful instrumental', contextName: 'Weather App', icon: '🌤️', designDna: 'Surprise', synthType: 'Busy Market' },
+  { id: 'vector-30', soundName: '🔮 Mysterious cinematic soundscape', contextName: 'Lost & Found App', icon: '🔍', designDna: 'Mystery', synthType: 'Space Station Ambient' },
 ];
 
-export const INITIAL_CONTEXTS = [
-  { id: 'ctx-01', name: 'Café', icon: '☕', description: 'Artisanal coffee house, order system, loyalty app, or cozy seating layout.', designDna: 'SONIC TEXTURE', active: true },
-  { id: 'ctx-02', name: 'E-commerce', icon: '🛒', description: 'Online storefront, flash sale marketplace, product showcase, or checkout funnel.', designDna: 'TACTILE RHYTHM', active: true },
-  { id: 'ctx-03', name: 'Healthcare', icon: '🏥', description: 'Patient portal, wellness tracking dashboard, emergency triage, or tele-health app.', designDna: 'ORGANIC PULSE', active: true },
-  { id: 'ctx-04', name: 'Education', icon: '🎓', description: 'Interactive learning platform, quiz interface, virtual classroom, or student portal.', designDna: 'HARMONIC FLOW', active: true },
-  { id: 'ctx-05', name: 'Banking & Fintech', icon: '🏦', description: 'Neobank dashboard, investment tracker, crypto wallet, or money transfer UI.', designDna: 'DIGITAL FREQUENCY', active: true },
-  { id: 'ctx-06', name: 'Travel & Expeditions', icon: '✈️', description: 'Flight booking hub, itinerary planner, hotel explorer, or travel journal.', designDna: 'ACOUSTIC VECTORS', active: true },
-  { id: 'ctx-07', name: 'Fitness & Sports', icon: '🏋️', description: 'Workout tracker, gym class booking, biometric dashboard, or habit logger.', designDna: 'KINETIC RESONANCE', active: true },
-  { id: 'ctx-08', name: 'Gaming & Cyber', icon: '🎮', description: 'Esports tournament lobby, game launcher, inventory manager, or guild chat.', designDna: 'SYNTHETIC ECHO', active: true },
-  { id: 'ctx-09', name: 'Real Estate', icon: '🏠', description: 'Architectural property viewer, virtual house tour, rental portal, or floor plan app.', designDna: 'SPATIAL AMBIENCE', active: true },
-  { id: 'ctx-10', name: 'Food Delivery', icon: '🍔', description: 'Rapid delivery tracker, dish customizing menu, chef table reservation, or meal kit app.', designDna: 'SENSORY VIBRATION', active: true },
-];
+export const INITIAL_SOUNDS = CURATED_CHALLENGES.map((item, idx) => ({
+  id: `snd-${(idx + 1).toString().padStart(2, '0')}`,
+  name: item.soundName,
+  description: `Audio vector paired with ${item.contextName} requiring ${item.designDna} design DNA.`,
+  audioUrl: '',
+  synthType: item.synthType,
+  designDna: item.designDna,
+  active: true
+}));
+
+export const INITIAL_CONTEXTS = CURATED_CHALLENGES.map((item, idx) => ({
+  id: `ctx-${(idx + 1).toString().padStart(2, '0')}`,
+  name: item.contextName,
+  icon: item.icon,
+  description: `Target application context: ${item.contextName} emphasizing ${item.designDna}.`,
+  designDna: item.designDna,
+  active: true
+}));
 
 export const INITIAL_GAMEROOMS = [
   {
@@ -120,50 +145,13 @@ export const INITIAL_TEAMS = [
   }
 ];
 
-export const INITIAL_ASSIGNMENTS = [
-  {
-    id: 'asg-EF-001',
-    teamId: 'EF-001',
-    soundId: 'snd-01', // Rain + Traffic
-    contextId: 'ctx-01', // Café
-    revealed: false,
-    revealedAt: null,
-    assignedAt: '2026-08-25T11:15:00.000Z'
-  },
-  {
-    id: 'asg-EF-002',
-    teamId: 'EF-002',
-    soundId: 'snd-03', // Ocean Waves
-    contextId: 'ctx-06', // Travel
-    revealed: false,
-    revealedAt: null,
-    assignedAt: '2026-08-25T11:15:00.000Z'
-  },
-  {
-    id: 'asg-EF-003',
-    teamId: 'EF-003',
-    soundId: 'snd-05', // Railway Station
-    contextId: 'ctx-02', // E-commerce
-    revealed: false,
-    revealedAt: null,
-    assignedAt: '2026-08-25T11:15:00.000Z'
-  },
-  {
-    id: 'asg-EF-004',
-    teamId: 'EF-004',
-    soundId: 'snd-08', // Cyberpunk Neon City
-    contextId: 'ctx-08', // Gaming
-    revealed: false,
-    revealedAt: null,
-    assignedAt: '2026-08-25T11:15:00.000Z'
-  },
-  {
-    id: 'asg-EF-005',
-    teamId: 'EF-005',
-    soundId: 'snd-02', // Thunderstorm
-    contextId: 'ctx-03', // Healthcare
-    revealed: false,
-    revealedAt: null,
-    assignedAt: '2026-08-25T11:15:00.000Z'
-  }
-];
+export const INITIAL_ASSIGNMENTS = INITIAL_TEAMS.map((team, idx) => ({
+  id: `asg-${team.id}`,
+  teamId: team.id,
+  soundId: INITIAL_SOUNDS[idx % INITIAL_SOUNDS.length].id,
+  contextId: INITIAL_CONTEXTS[idx % INITIAL_CONTEXTS.length].id,
+  customDesignDna: CURATED_CHALLENGES[idx % CURATED_CHALLENGES.length].designDna,
+  revealed: false,
+  revealedAt: null,
+  assignedAt: '2026-08-25T11:15:00.000Z'
+}));

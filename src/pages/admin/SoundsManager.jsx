@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { getSounds, createSound, updateSound, deleteSound } from '../../services/sounds';
-import { Headphones, Plus, Play, Pause, Trash2, Upload, Link, Radio, Dna, FileAudio, Edit3, Check, X } from 'lucide-react';
+import { getSounds, createSound, createMultipleSounds, updateSound, deleteSound } from '../../services/sounds';
+import { Headphones, Plus, Play, Pause, Trash2, Upload, Link, Radio, Dna, FileAudio, Edit3, Check, X, Layers, RefreshCw } from 'lucide-react';
 import { playSynthSound, stopSynthSound } from '../../audio/soundSynth';
 import NotificationToast from '../../components/NotificationToast';
+import { CURATED_CHALLENGES } from '../../utils/constants';
 
 export default function SoundsManager() {
   const [sounds, setSounds] = useState(getSounds());
   const [playingId, setPlayingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [audioType, setAudioType] = useState('upload'); // 'upload' | 'synth' | 'url'
+  const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
   const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -28,6 +32,59 @@ export default function SoundsManager() {
     audioUrl: '',
     designDna: ''
   });
+
+  // BULK FILE UPLOAD HANDLER
+  const handleBulkFilesUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsProcessingBulk(true);
+    setBulkProgress(0);
+
+    const validFiles = files.filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|ogg|m4a|aac|flac)$/i));
+
+    if (validFiles.length === 0) {
+      setToast({ type: 'error', message: 'No valid audio files selected.' });
+      setIsProcessingBulk(false);
+      return;
+    }
+
+    const batchSounds = [];
+
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+
+      if (dataUrl) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, "");
+        const matchedVector = CURATED_CHALLENGES[i % CURATED_CHALLENGES.length];
+
+        batchSounds.push({
+          name: cleanName,
+          audioUrl: dataUrl,
+          description: `Custom uploaded track for ${matchedVector ? matchedVector.contextName : 'Challenge'}`,
+          designDna: matchedVector ? matchedVector.designDna : null,
+          synthType: matchedVector ? matchedVector.synthType : 'Rain + Traffic'
+        });
+      }
+
+      setBulkProgress(Math.round(((i + 1) / validFiles.length) * 100));
+    }
+
+    if (batchSounds.length > 0) {
+      await createMultipleSounds(batchSounds);
+      setSounds(getSounds());
+      setToast({ type: 'success', message: `Successfully batch uploaded ${batchSounds.length} audio tracks!` });
+    }
+
+    setIsProcessingBulk(false);
+    setShowBulkUpload(false);
+  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -149,24 +206,81 @@ export default function SoundsManager() {
             Audio & Soundscape Library ({sounds.length})
           </h2>
           <p className="text-xs text-slate-400 font-mono">
-            Upload custom MP3/WAV audio files or select procedural Web Audio synthesizers for team challenges.
+            Upload single or bulk MP3/WAV files for your 30 curated ECHOFORM design challenge vectors.
           </p>
         </div>
 
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyber-cyan/20 hover:scale-105 transition-transform"
-        >
-          <Plus className="w-4 h-4" />
-          {showForm ? 'Cancel Add Sound' : '+ Add Custom Audio / Sound'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowBulkUpload(!showBulkUpload)}
+            className="px-4 py-2 rounded-xl bg-dark-950 border border-cyber-pink/50 text-cyber-pink font-bold text-xs flex items-center gap-2 hover:bg-cyber-pink/10 transition-all shadow-lg"
+          >
+            <Layers className="w-4 h-4" />
+            {showBulkUpload ? 'Close Bulk Upload' : '⚡ Bulk Upload Audios'}
+          </button>
+
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-bold text-xs flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
+          >
+            <Plus className="w-4 h-4" />
+            {showForm ? 'Cancel Add Sound' : '+ Add Single Sound'}
+          </button>
+        </div>
       </div>
 
-      {/* CREATE FORM */}
+      {/* BULK UPLOADER CARD */}
+      {showBulkUpload && (
+        <div className="bg-dark-900 border border-cyber-pink/40 rounded-3xl p-6 shadow-2xl space-y-4">
+          <div className="flex items-center gap-2 border-b border-dark-800 pb-3">
+            <Upload className="w-5 h-5 text-cyber-pink" />
+            <h3 className="font-outfit font-bold text-lg text-white">Batch Upload Multiple Audio Files at Once</h3>
+          </div>
+          <p className="text-xs text-slate-300 font-mono">
+            Select multiple <code>.mp3</code>, <code>.wav</code>, or <code>.ogg</code> audio files from your device. All files will be saved in IndexedDB and automatically added to your sound library in 1 click!
+          </p>
+
+          <div className="border-2 border-dashed border-cyber-pink/40 rounded-2xl p-8 text-center bg-dark-950/50 hover:bg-cyber-pink/5 transition-all">
+            <input
+              type="file"
+              accept="audio/*"
+              multiple
+              onChange={handleBulkFilesUpload}
+              disabled={isProcessingBulk}
+              className="hidden"
+              id="bulk-audio-input"
+            />
+            <label htmlFor="bulk-audio-input" className="cursor-pointer flex flex-col items-center justify-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-cyber-pink/10 border border-cyber-pink/30 flex items-center justify-center text-cyber-pink">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-outfit font-bold text-white block">
+                  {isProcessingBulk ? `Uploading and Processing... (${bulkProgress}%)` : 'Click to select multiple audio files (or drag & drop)'}
+                </span>
+                <span className="text-[11px] font-mono text-slate-400">
+                  Select 5, 10, or all 30 audio files at once
+                </span>
+              </div>
+            </label>
+
+            {isProcessingBulk && (
+              <div className="w-full bg-dark-900 h-2 rounded-full mt-4 overflow-hidden border border-dark-800">
+                <div
+                  className="bg-gradient-to-r from-cyber-cyan to-cyber-pink h-full transition-all duration-300"
+                  style={{ width: `${bulkProgress}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SINGLE CREATE FORM */}
       {showForm && (
         <form onSubmit={handleAdd} className="bg-dark-900 border border-cyber-cyan/40 rounded-3xl p-6 shadow-2xl space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="font-outfit font-bold text-lg text-white">Add Custom Sound / Audio Preset</h3>
+            <h3 className="font-outfit font-bold text-lg text-white">Add Single Custom Sound / Audio Preset</h3>
 
             {/* AUDIO SOURCE TOGGLE */}
             <div className="flex items-center bg-dark-950 p-1 rounded-xl border border-dark-800 text-xs font-mono">
@@ -205,7 +319,7 @@ export default function SoundsManager() {
               <label className="text-[11px] font-mono text-slate-400 mb-1 block">Sound Title *</label>
               <input
                 type="text"
-                placeholder="Sound Title (e.g. Neon City Traffic / Rainscape)"
+                placeholder="Sound Title (e.g. Rain on a metal roof)"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-950 border border-dark-800 text-xs text-white focus:border-cyber-cyan outline-none"
@@ -232,12 +346,11 @@ export default function SoundsManager() {
                   <option value="Busy Market">Busy Market</option>
                   <option value="Forest & Birds">Forest & Birds</option>
                   <option value="Space Station Ambient">Space Station Ambient</option>
-                  <option value="Heavy Rain">Heavy Rain</option>
                 </select>
               </div>
             ) : audioType === 'upload' ? (
               <div>
-                <label className="text-[11px] font-mono text-slate-400 mb-1 block">Upload Audio File (.mp3, .wav, .ogg)</label>
+                <label className="text-[11px] font-mono text-slate-400 mb-1 block">Upload Audio File (.mp3, .wav)</label>
                 <div className="flex items-center gap-2">
                   <label className="flex-1 px-3.5 py-2 rounded-xl bg-dark-950 border border-cyber-cyan/40 text-xs text-cyber-cyan cursor-pointer hover:bg-cyber-cyan/10 flex items-center justify-between">
                     <span className="truncate">{formData.fileName || 'Choose MP3 / WAV file...'}</span>
@@ -283,9 +396,9 @@ export default function SoundsManager() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. SONIC TEXTURE"
+                placeholder="e.g. Texture, Movement, Space"
                 value={formData.designDna}
-                onChange={(e) => setFormData({ ...formData, designDna: e.target.value.toUpperCase() })}
+                onChange={(e) => setFormData({ ...formData, designDna: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-purple/50 text-xs text-cyber-purple font-mono font-bold uppercase focus:border-cyber-purple outline-none"
               />
             </div>
@@ -296,7 +409,7 @@ export default function SoundsManager() {
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-bold text-xs shadow-lg hover:scale-105 transition-transform"
             >
-              Save Custom Audio Preset
+              Save Audio Preset
             </button>
           </div>
         </form>
@@ -304,7 +417,7 @@ export default function SoundsManager() {
 
       {/* SOUNDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sounds.map((sound) => (
+        {sounds.map((sound, idx) => (
           <div
             key={sound.id}
             className="bg-dark-900 border border-dark-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-cyber-cyan/40 transition-colors shadow-lg relative"
@@ -313,7 +426,7 @@ export default function SoundsManager() {
               /* INLINE EDIT FORM */
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-cyber-cyan font-bold">Editing Sound</span>
+                  <span className="text-xs font-mono text-cyber-cyan font-bold">Editing Sound #{idx + 1}</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleSaveEdit(sound.id)}
@@ -345,17 +458,6 @@ export default function SoundsManager() {
                   rows={2}
                   className="w-full px-2.5 py-1 rounded bg-dark-950 border border-dark-800 text-[11px] text-slate-300"
                 />
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-cyber-purple font-bold">Custom Audio URL / File</label>
-                  <input
-                    type="text"
-                    value={editFormData.audioUrl}
-                    onChange={(e) => setEditFormData({ ...editFormData, audioUrl: e.target.value })}
-                    placeholder="Audio URL or data:audio..."
-                    className="w-full px-2.5 py-1 rounded bg-dark-950 border border-dark-800 text-[10px] font-mono text-slate-300"
-                  />
-                </div>
               </div>
             ) : (
               /* CARD VIEW */
@@ -376,14 +478,17 @@ export default function SoundsManager() {
                       </button>
 
                       <div>
-                        <h4 className="font-outfit font-bold text-white text-base">{sound.name}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono text-slate-500 font-bold">#{(idx + 1).toString().padStart(2, '0')}</span>
+                          <h4 className="font-outfit font-bold text-white text-base leading-tight">{sound.name}</h4>
+                        </div>
                         
-                        {sound.audioUrl ? (
-                          <span className="text-[10px] font-mono text-cyber-cyan bg-cyber-cyan/10 px-2 py-0.5 rounded border border-cyber-cyan/30 inline-flex items-center gap-1">
+                        {sound.isCustom || sound.hasIdbAudio ? (
+                          <span className="text-[10px] font-mono text-cyber-cyan bg-cyber-cyan/10 px-2 py-0.5 rounded border border-cyber-cyan/30 inline-flex items-center gap-1 mt-1">
                             <FileAudio className="w-3 h-3" /> Uploaded Audio Track
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono text-cyber-purple bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30 inline-flex items-center gap-1">
+                          <span className="text-[10px] font-mono text-cyber-purple bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30 inline-flex items-center gap-1 mt-1">
                             <Radio className="w-3 h-3" /> Synth: {sound.synthType || sound.name}
                           </span>
                         )}
@@ -409,8 +514,8 @@ export default function SoundsManager() {
                   </div>
 
                   {sound.designDna && (
-                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-[10px] font-bold">
-                      <Dna className="w-3 h-3" /> {sound.designDna}
+                    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-[10px] font-bold">
+                      <Dna className="w-3 h-3" /> DNA: {sound.designDna}
                     </div>
                   )}
 
