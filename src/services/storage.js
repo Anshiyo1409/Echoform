@@ -12,7 +12,20 @@ const KEYS = {
   AUTH_SESSION: 'echoform_auth_session'
 };
 
+const STORAGE_VERSION = 'v2_30_vectors_curated';
+
 export function initStorage() {
+  const currentVer = localStorage.getItem('echoform_ver');
+  
+  if (currentVer !== STORAGE_VERSION) {
+    // Migrate to 30 Curated Vectors version
+    localStorage.setItem(KEYS.EVENT, JSON.stringify(DEFAULT_EVENT));
+    localStorage.setItem(KEYS.SOUNDS, JSON.stringify(INITIAL_SOUNDS));
+    localStorage.setItem(KEYS.CONTEXTS, JSON.stringify(INITIAL_CONTEXTS));
+    localStorage.setItem(KEYS.ASSIGNMENTS, JSON.stringify(INITIAL_ASSIGNMENTS));
+    localStorage.setItem('echoform_ver', STORAGE_VERSION);
+  }
+
   if (!localStorage.getItem(KEYS.EVENT)) {
     localStorage.setItem(KEYS.EVENT, JSON.stringify(DEFAULT_EVENT));
   }
@@ -34,6 +47,13 @@ export function initStorage() {
   if (!localStorage.getItem(KEYS.SUBMISSIONS)) {
     localStorage.setItem(KEYS.SUBMISSIONS, JSON.stringify([]));
   }
+}
+
+export function resetTo30CuratedVectors() {
+  localStorage.setItem(KEYS.SOUNDS, JSON.stringify(INITIAL_SOUNDS));
+  localStorage.setItem(KEYS.CONTEXTS, JSON.stringify(INITIAL_CONTEXTS));
+  localStorage.setItem(KEYS.ASSIGNMENTS, JSON.stringify(INITIAL_ASSIGNMENTS));
+  localStorage.setItem('echoform_ver', STORAGE_VERSION);
 }
 
 export function getItem(key) {

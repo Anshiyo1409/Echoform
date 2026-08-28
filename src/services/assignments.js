@@ -3,6 +3,7 @@ import { getTeams } from './teams';
 import { getSounds } from './sounds';
 import { getContexts } from './contexts';
 import { generateRandomAssignments } from '../utils/randomizer';
+import { CURATED_CHALLENGES } from '../utils/constants';
 
 export function getAssignments() {
   return getItem(KEYS.ASSIGNMENTS) || [];
@@ -13,8 +14,35 @@ export function getAssignmentByTeamId(teamId) {
   const soundList = getSounds();
   const contextList = getContexts();
 
-  const asg = assignments.find(a => a.teamId === teamId);
-  if (!asg) return null;
+  let asg = assignments.find(a => a.teamId === teamId);
+
+  // If no assignment exists for this team, generate one from CURATED_CHALLENGES
+  if (!asg) {
+    const teamIdx = Math.abs(hashCode(teamId)) % CURATED_CHALLENGES.length;
+    const vector = CURATED_CHALLENGES[teamIdx];
+    
+    return {
+      id: `asg-${teamId}`,
+      teamId,
+      revealed: false,
+      revealedAt: null,
+      assignedAt: new Date().toISOString(),
+      sound: {
+        id: `snd-${teamIdx + 1}`,
+        name: vector.soundName,
+        synthType: vector.synthType,
+        description: `Audio vector for ${vector.contextName} emphasizing ${vector.designDna}.`,
+        designDna: vector.designDna
+      },
+      context: {
+        id: `ctx-${teamIdx + 1}`,
+        name: vector.contextName,
+        icon: vector.icon,
+        description: `Target application context: ${vector.contextName} emphasizing ${vector.designDna}.`,
+        designDna: vector.designDna
+      }
+    };
+  }
 
   let sound = soundList.find(s => s.id === asg.soundId);
   let context = contextList.find(c => c.id === asg.contextId);
@@ -44,11 +72,33 @@ export function getAssignmentByTeamId(teamId) {
     }
   }
 
+  // Fallback to match curated challenges if sound or context is unlinked
+  if (!sound || !context) {
+    const teamIdx = Math.abs(hashCode(teamId)) % CURATED_CHALLENGES.length;
+    const vector = CURATED_CHALLENGES[teamIdx];
+    if (!sound) {
+      sound = { id: `snd-${teamIdx + 1}`, name: vector.soundName, synthType: vector.synthType, designDna: vector.designDna };
+    }
+    if (!context) {
+      context = { id: `ctx-${teamIdx + 1}`, name: vector.contextName, icon: vector.icon, designDna: vector.designDna };
+    }
+  }
+
   return {
     ...asg,
     sound,
     context
   };
+}
+
+function hashCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return hash;
 }
 
 export function markAssignmentRevealed(teamId) {
