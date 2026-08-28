@@ -1,6 +1,8 @@
 // ECHOFORM Web Audio Synthesizer Engine
 // Generates rich, procedural soundscapes for design challenge sounds in browser
 
+import { getAudioFromDB } from '../services/audioStorage';
+
 let audioCtx = null;
 let currentNodes = [];
 let isPlaying = false;
@@ -50,15 +52,16 @@ function createNoiseBuffer(ctx, duration = 5) {
   }
   return buffer;
 }
-
-export function playSynthSound(soundInput, volume = 0.7, onFrameCallback = null) {
+export async function playSynthSound(soundInput, volume = 0.7, onFrameCallback = null) {
   stopSynthSound();
 
   let customUrl = null;
   let key = '';
+  let soundId = null;
 
   if (typeof soundInput === 'object' && soundInput !== null) {
     customUrl = soundInput.audioUrl || null;
+    soundId = soundInput.id || null;
     key = (soundInput.synthType || soundInput.name || '').toLowerCase();
   } else if (typeof soundInput === 'string') {
     if (
@@ -73,7 +76,15 @@ export function playSynthSound(soundInput, volume = 0.7, onFrameCallback = null)
     }
   }
 
-  if (customUrl) {
+  // If audio URL is stored in IndexedDB or missing, try loading from IDB
+  if ((!customUrl || customUrl.startsWith('[IDB]:')) && soundId) {
+    const dbAudio = await getAudioFromDB(soundId);
+    if (dbAudio) {
+      customUrl = dbAudio;
+    }
+  }
+
+  if (customUrl && !customUrl.startsWith('[IDB]:')) {
     isPlaying = true;
     currentSoundId = 'custom_audio';
     try {

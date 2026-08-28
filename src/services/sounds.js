@@ -3,7 +3,6 @@ import { saveAudioToDB, getAudioFromDB, deleteAudioFromDB } from './audioStorage
 
 export function getSounds() {
   const sounds = getItem(KEYS.SOUNDS) || [];
-  // Ensure sounds array is returned
   return sounds;
 }
 
@@ -12,44 +11,79 @@ export function getSoundById(soundId) {
   return sounds.find(s => s.id === soundId);
 }
 
+export async function loadAudioUrlForSound(sound) {
+  if (!sound) return null;
+  if (sound.audioUrl && (sound.audioUrl.startsWith('http') || sound.audioUrl.startsWith('data:audio/'))) {
+    return sound.audioUrl;
+  }
+  // Try retrieving heavy audio Data URL from IndexedDB
+  const idbAudio = await getAudioFromDB(sound.id);
+  if (idbAudio) {
+    return idbAudio;
+  }
+  return sound.audioUrl || null;
+}
+
 export async function createSound(soundData) {
   const sounds = getSounds();
   const soundId = `snd-${Date.now()}`;
-  let audioUrl = soundData.audioUrl || '';
+  const rawAudioUrl = soundData.audioUrl || '';
+  const isBase64 = rawAudioUrl.startsWith('data:audio/');
 
-  // If audioUrl is a large base64 Data URL, offload it to IndexedDB to avoid 5MB localStorage quota limit
-  if (audioUrl.startsWith('data:audio/')) {
-    await saveAudioToDB(soundId, audioUrl);
-    // Keep reference in sound object
+  if (isBase64) {
+    // Store heavy audio stream in IndexedDB
+    await saveAudioToDB(soundId, rawAudioUrl);
   }
 
+  // Create lightweight metadata for localStorage to avoid 5MB quota limit
   const newSound = {
     id: soundId,
     name: soundData.name,
     description: soundData.description || '',
-    audioUrl: audioUrl,
+    // If base64, save identifier marker in localStorage; full data lives in IndexedDB
+    audioUrl: isBase64 ? `[IDB]:${soundId}` : rawAudioUrl,
     synthType: soundData.synthType || soundData.name,
     designDna: soundData.designDna || null,
-    isCustom: !!audioUrl,
+    isCustom: !!rawAudioUrl,
+    hasIdbAudio: isBase64,
     active: true,
     createdAt: new Date().toISOString()
   };
 
   sounds.push(newSound);
   setItem(KEYS.SOUNDS, sounds);
-  return newSound;
+
+  // Return sound object with original audioUrl attached in memory
+  return {
+    ...newSound,
+    audioUrl: rawAudioUrl
+  };
 }
 
 export async function updateSound(soundId, updateData) {
   const sounds = getSounds();
   const index = sounds.findIndex(s => s.id === soundId);
   if (index !== -1) {
-    if (updateData.audioUrl && updateData.audioUrl.startsWith('data:audio/')) {
-      await saveAudioToDB(soundId, updateData.audioUrl);
+    const rawAudioUrl = updateData.audioUrl || '';
+    const isBase64 = rawAudioUrl.startsWith('data:audio/');
+
+    if (isBase64) {
+      await saveAudioToDB(soundId, rawAudioUrl);
     }
-    sounds[index] = { ...sounds[index], ...updateData };
+
+    const updatedSound = {
+      ...sounds[index],
+      ...updateData,
+      audioUrl: isBase64 ? `[IDB]:${soundId}` : rawAudioUrl,
+      hasIdbAudio: isBase64 || sounds[index].hasIdbAudio
+    };
+
+    sounds[index] = updatedSound;
     setItem(KEYS.SOUNDS, sounds);
-    return sounds[index];
+    return {
+      ...updatedSound,
+      audioUrl: rawAudioUrl || updatedSound.audioUrl
+    };
   }
   return null;
 }
