@@ -1,22 +1,12 @@
-import { getItem, setItem, KEYS } from './storage';
+import { getItem, setItem } from './storage';
 import { CURATED_CHALLENGES } from '../utils/constants';
 
 const VECTOR_KEYS = 'echoform_vector_mappings';
 
 export function getVectorMappings() {
   let mappings = getItem(VECTOR_KEYS);
-  if (!mappings || mappings.length === 0) {
-    mappings = CURATED_CHALLENGES.map((item, idx) => ({
-      id: item.id || `vector-${idx + 1}`,
-      soundName: item.soundName,
-      soundId: `snd-${(idx + 1).toString().padStart(2, '0')}`,
-      contextName: item.contextName,
-      contextId: `ctx-${(idx + 1).toString().padStart(2, '0')}`,
-      designDna: item.designDna,
-      icon: item.icon || '🎯',
-      synthType: item.synthType,
-      active: true
-    }));
+  if (!mappings) {
+    mappings = [];
     setItem(VECTOR_KEYS, mappings);
   }
   return mappings;
@@ -36,16 +26,15 @@ export function saveVectorMapping(id, updateData) {
 export function createVectorMapping(vectorData) {
   const mappings = getVectorMappings();
   const newMapping = {
-    id: `vector-${Date.now()}`,
-    soundName: vectorData.soundName || 'Custom Audio',
+    id: `vector-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    soundName: vectorData.soundName || 'Uploaded Custom Audio',
     soundId: vectorData.soundId || '',
     contextName: vectorData.contextName || 'Café App',
     contextId: vectorData.contextId || '',
-    designDna: vectorData.designDna || 'SONIC TEXTURE',
+    designDna: vectorData.designDna || 'Texture',
     icon: vectorData.icon || '🎯',
-    synthType: vectorData.synthType || 'Rain + Traffic',
     audioUrl: vectorData.audioUrl || '',
-    active: true,
+    isCustom: true,
     createdAt: new Date().toISOString()
   };
   mappings.push(newMapping);
@@ -61,17 +50,6 @@ export function deleteVectorMapping(id) {
 }
 
 export function resetVectorMappingsToDefault() {
-  const defaults = CURATED_CHALLENGES.map((item, idx) => ({
-    id: `vector-${idx + 1}`,
-    soundName: item.soundName,
-    soundId: `snd-${(idx + 1).toString().padStart(2, '0')}`,
-    contextName: item.contextName,
-    contextId: `ctx-${(idx + 1).toString().padStart(2, '0')}`,
-    designDna: item.designDna,
-    icon: item.icon || '🎯',
-    synthType: item.synthType,
-    active: true
-  }));
-  setItem(VECTOR_KEYS, defaults);
-  return defaults;
+  setItem(VECTOR_KEYS, []);
+  return [];
 }

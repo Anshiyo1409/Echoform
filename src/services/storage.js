@@ -12,13 +12,13 @@ const KEYS = {
   AUTH_SESSION: 'echoform_auth_session'
 };
 
-const STORAGE_VERSION = 'v2_30_vectors_curated';
+const STORAGE_VERSION = 'v3_custom_audio_only';
 
 export function initStorage() {
   const currentVer = localStorage.getItem('echoform_ver');
   
   if (currentVer !== STORAGE_VERSION) {
-    // Migrate to 30 Curated Vectors version
+    // Clean out old synth sounds and set version to custom audio only
     localStorage.setItem(KEYS.EVENT, JSON.stringify(DEFAULT_EVENT));
     localStorage.setItem(KEYS.SOUNDS, JSON.stringify(INITIAL_SOUNDS));
     localStorage.setItem(KEYS.CONTEXTS, JSON.stringify(INITIAL_CONTEXTS));

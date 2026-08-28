@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { getVectorMappings, saveVectorMapping, createVectorMapping, deleteVectorMapping, resetVectorMappingsToDefault } from '../../services/vectorMappings';
 import { getSounds, createMultipleSounds, createSound } from '../../services/sounds';
 import { getContexts } from '../../services/contexts';
-import { Headphones, Target, Dna, Upload, Play, Pause, Plus, Trash2, Check, RefreshCw, Layers, Sparkles, Edit3, X, Radio } from 'lucide-react';
+import { Headphones, Target, Dna, Upload, Play, Pause, Plus, Trash2, Check, RefreshCw, Layers, Sparkles, Edit3, X } from 'lucide-react';
 import { playSynthSound, stopSynthSound } from '../../audio/soundSynth';
 import NotificationToast from '../../components/NotificationToast';
 
@@ -84,10 +84,26 @@ export default function VectorMappingsManager() {
       });
 
       setMappings(getVectorMappings());
-      setToast({ type: 'success', message: `Successfully batch uploaded & mapped ${batchSounds.length} audio tracks!` });
+      setToast({ type: 'success', message: `Successfully uploaded & mapped ${batchSounds.length} audio tracks!` });
     }
 
     setIsProcessingBulk(false);
+  };
+
+  const handleFileUploadSingle = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setNewVector(prev => ({
+        ...prev,
+        audioUrl: ev.target.result,
+        soundName: prev.soundName || file.name.replace(/\.[^/.]+$/, "")
+      }));
+      setToast({ type: 'success', message: `Audio file "${file.name}" loaded!` });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUpdateMapping = (id, field, value) => {
@@ -154,14 +170,6 @@ export default function VectorMappingsManager() {
     }
   };
 
-  const handleResetToDefault = () => {
-    if (window.confirm('Reset all Audio-Context vector pairs to the standard 30 curated challenges?')) {
-      resetVectorMappingsToDefault();
-      setMappings(getVectorMappings());
-      setToast({ type: 'success', message: 'Reset to 30 curated challenge vectors!' });
-    }
-  };
-
   const toggleSound = (soundOrMapping) => {
     const playKey = soundOrMapping.soundId || soundOrMapping.id;
     if (playingId === playKey) {
@@ -171,8 +179,7 @@ export default function VectorMappingsManager() {
       stopSynthSound();
       const soundObj = sounds.find(s => s.id === soundOrMapping.soundId || s.name === soundOrMapping.soundName) || {
         name: soundOrMapping.soundName,
-        audioUrl: soundOrMapping.audioUrl,
-        synthType: soundOrMapping.synthType || soundOrMapping.soundName
+        audioUrl: soundOrMapping.audioUrl
       };
       playSynthSound(soundObj, 0.8);
       setPlayingId(playKey);
@@ -190,29 +197,21 @@ export default function VectorMappingsManager() {
             <div className="flex items-center gap-2">
               <Layers className="w-6 h-6 text-cyber-purple" />
               <h2 className="font-outfit font-black text-2xl text-white">
-                Audio & Context Vector Mapping Studio ({mappings.length})
+                Custom Audio & Context Vector Studio ({mappings.length})
               </h2>
             </div>
             <p className="text-xs text-slate-400 font-mono mt-1">
-              Pair every uploaded custom audio track or synth sound with a Target Context and Design DNA independently.
+              Upload your audio files and pair each track with a Target Context and Design DNA.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={handleResetToDefault}
-              className="px-4 py-2.5 rounded-xl bg-dark-950 border border-dark-700 text-slate-300 font-outfit font-bold text-xs flex items-center gap-1.5 hover:bg-dark-800 transition-all"
-            >
-              <RefreshCw className="w-4 h-4 text-cyber-cyan" />
-              Reset 30 Vectors
-            </button>
-
-            <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-outfit font-bold text-xs flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
             >
               <Plus className="w-4 h-4" />
-              {showAddForm ? 'Cancel New Pair' : '+ Add Vector Pair'}
+              {showAddForm ? 'Cancel New Audio' : '+ Upload Single Audio'}
             </button>
           </div>
         </div>
@@ -221,10 +220,10 @@ export default function VectorMappingsManager() {
         <div className="bg-dark-950 border border-cyber-purple/40 rounded-2xl p-6 space-y-3">
           <div className="flex items-center gap-2">
             <Upload className="w-5 h-5 text-cyber-purple" />
-            <h3 className="font-outfit font-bold text-base text-white">Bulk Upload Audio Tracks & Auto-Map to Contexts</h3>
+            <h3 className="font-outfit font-bold text-base text-white">Upload Your Audio Files (Bulk Upload)</h3>
           </div>
           <p className="text-xs text-slate-400 font-mono">
-            Select multiple <code>.mp3</code> or <code>.wav</code> files from your computer. Every audio track will be saved to IndexedDB and automatically listed in your vector mapping studio below!
+            Select your <code>.mp3</code>, <code>.wav</code>, or <code>.m4a</code> audio files from your computer. Every audio track will be saved directly and listed below for context mapping!
           </p>
 
           <div className="border-2 border-dashed border-cyber-purple/40 rounded-xl p-6 text-center bg-dark-900/50 hover:bg-cyber-purple/10 transition-all">
@@ -242,25 +241,34 @@ export default function VectorMappingsManager() {
                 <Upload className="w-5 h-5" />
               </div>
               <span className="text-sm font-outfit font-bold text-white">
-                {isProcessingBulk ? `Uploading and Processing (${bulkProgress}%)...` : 'Click to Upload Multiple Audio Files (Bulk)'}
+                {isProcessingBulk ? `Uploading Audio Files (${bulkProgress}%)...` : 'Click to Select Audio Files (Bulk)'}
               </span>
-              <span className="text-[11px] font-mono text-slate-500">Select 5, 10, 20, or 30 MP3 files at once</span>
+              <span className="text-[11px] font-mono text-slate-500">Select MP3 / WAV files to upload</span>
             </label>
           </div>
         </div>
       </div>
 
-      {/* CREATE NEW VECTOR FORM */}
+      {/* SINGLE AUDIO UPLOAD FORM */}
       {showAddForm && (
         <form onSubmit={handleCreateNewVector} className="bg-dark-900 border border-cyber-cyan/40 rounded-3xl p-6 shadow-2xl space-y-4">
-          <h3 className="font-outfit font-bold text-lg text-white">Create New Custom Audio & Context Vector Pair</h3>
+          <h3 className="font-outfit font-bold text-lg text-white">Upload Audio Track & Map to Context</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-[11px] font-mono text-slate-400 mb-1 block">Audio Track Title *</label>
+              <label className="text-[11px] font-mono text-slate-400 mb-1 block">Audio File *</label>
+              <label className="px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-cyan/40 text-cyber-cyan text-xs flex items-center justify-between cursor-pointer hover:bg-cyber-cyan/10">
+                <span className="truncate">{newVector.audioUrl ? 'Audio file loaded' : 'Select MP3/WAV...'}</span>
+                <Upload className="w-4 h-4 shrink-0" />
+                <input type="file" accept="audio/*" onChange={handleFileUploadSingle} className="hidden" />
+              </label>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-mono text-slate-400 mb-1 block">Audio Title *</label>
               <input
                 type="text"
-                placeholder="Sound Title (e.g. Cyberpunk Synth)"
+                placeholder="Track Title (e.g. Ambient Rain)"
                 value={newVector.soundName}
                 onChange={(e) => setNewVector({ ...newVector, soundName: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-950 border border-dark-800 text-xs text-white focus:border-cyber-cyan outline-none"
@@ -280,17 +288,6 @@ export default function VectorMappingsManager() {
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="text-[11px] font-mono text-cyber-purple font-bold mb-1 block">Design DNA</label>
-              <input
-                type="text"
-                placeholder="e.g. Texture, Movement, Space"
-                value={newVector.designDna}
-                onChange={(e) => setNewVector({ ...newVector, designDna: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-950 border border-cyber-purple/50 text-xs text-cyber-purple font-mono font-bold uppercase focus:border-cyber-purple outline-none"
-              />
-            </div>
           </div>
 
           <div className="flex justify-end pt-2">
@@ -298,7 +295,7 @@ export default function VectorMappingsManager() {
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-bold text-xs shadow-lg hover:scale-105 transition-transform"
             >
-              Save Vector Pair
+              Save Uploaded Audio Vector
             </button>
           </div>
         </form>
@@ -309,106 +306,108 @@ export default function VectorMappingsManager() {
         <div className="p-6 border-b border-dark-800 flex items-center justify-between">
           <h3 className="font-outfit font-bold text-lg text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-cyber-cyan" />
-            Audio-to-Context Vector Mappings ({mappings.length})
+            Uploaded Audio Mappings ({mappings.length})
           </h3>
           <span className="text-xs font-mono text-slate-400">
-            Changes update vector relationships instantly
+            Every uploaded track is paired with Context & Design DNA
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-dark-950 border-b border-dark-800 text-slate-400 uppercase tracking-wider">
-              <tr>
-                <th className="px-6 py-4">#</th>
-                <th className="px-6 py-4">🎧 Audio Track</th>
-                <th className="px-6 py-4">🎯 Target Context</th>
-                <th className="px-6 py-4">🧬 Design DNA</th>
-                <th className="px-6 py-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-dark-800 text-slate-300">
-              {mappings.map((item, idx) => {
-                const playKey = item.soundId || item.id;
-                const matchedSound = sounds.find(s => s.id === item.soundId || s.name === item.soundName);
-                const isCustomAudio = matchedSound?.isCustom || matchedSound?.hasIdbAudio || !!item.audioUrl;
+        {mappings.length === 0 ? (
+          <div className="p-12 text-center space-y-3">
+            <Headphones className="w-12 h-12 text-slate-600 mx-auto" />
+            <h4 className="font-outfit font-bold text-white text-lg">No Custom Audios Uploaded Yet</h4>
+            <p className="text-xs text-slate-400 font-mono max-w-md mx-auto">
+              Use the bulk upload box above to select your audio files (.mp3, .wav). Once uploaded, you can map each audio track to a Target Context and Design DNA!
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono">
+              <thead className="bg-dark-950 border-b border-dark-800 text-slate-400 uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-4">#</th>
+                  <th className="px-6 py-4">🎧 Uploaded Audio Track</th>
+                  <th className="px-6 py-4">🎯 Target Context</th>
+                  <th className="px-6 py-4">🧬 Design DNA</th>
+                  <th className="px-6 py-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-dark-800 text-slate-300">
+                {mappings.map((item, idx) => {
+                  const playKey = item.soundId || item.id;
 
-                return (
-                  <tr key={item.id} className="hover:bg-dark-850/60 transition-colors">
-                    <td className="px-6 py-4 font-mono text-slate-500 font-bold">
-                      {(idx + 1).toString().padStart(2, '0')}
-                    </td>
+                  return (
+                    <tr key={item.id} className="hover:bg-dark-850/60 transition-colors">
+                      <td className="px-6 py-4 font-mono text-slate-500 font-bold">
+                        {(idx + 1).toString().padStart(2, '0')}
+                      </td>
 
-                    {/* AUDIO TRACK COLUMN */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => toggleSound(item)}
-                          className={`p-2 rounded-xl border transition-all ${
-                            playingId === playKey
-                              ? 'bg-cyber-cyan text-dark-950 font-bold border-cyber-cyan shadow-lg animate-pulse'
-                              : 'bg-dark-950 text-cyber-cyan border-cyber-cyan/30 hover:bg-cyber-cyan/10'
-                          }`}
-                        >
-                          {playingId === playKey ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </button>
-                        <div>
-                          <strong className="font-outfit font-bold text-white text-sm block">{item.soundName}</strong>
-                          {isCustomAudio ? (
+                      {/* AUDIO TRACK COLUMN */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => toggleSound(item)}
+                            className={`p-2 rounded-xl border transition-all ${
+                              playingId === playKey
+                                ? 'bg-cyber-cyan text-dark-950 font-bold border-cyber-cyan shadow-lg animate-pulse'
+                                : 'bg-dark-950 text-cyber-cyan border-cyber-cyan/30 hover:bg-cyber-cyan/10'
+                            }`}
+                          >
+                            {playingId === playKey ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          </button>
+                          <div>
+                            <strong className="font-outfit font-bold text-white text-sm block">{item.soundName}</strong>
                             <span className="text-[10px] font-mono text-cyber-cyan bg-cyber-cyan/10 px-2 py-0.5 rounded border border-cyber-cyan/30 inline-flex items-center gap-1 mt-0.5">
-                              <Sparkles className="w-3 h-3" /> Custom MP3 Track
+                              <Sparkles className="w-3 h-3" /> Uploaded Audio Track
                             </span>
-                          ) : (
-                            <span className="text-[10px] font-mono text-cyber-purple bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30 inline-flex items-center gap-1 mt-0.5">
-                              <Radio className="w-3 h-3" /> Synth Soundscape
-                            </span>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* TARGET CONTEXT SELECTOR */}
-                    <td className="px-6 py-4">
-                      <select
-                        value={item.contextId || ''}
-                        onChange={(e) => handleUpdateMapping(item.id, 'contextId', e.target.value)}
-                        className="px-3.5 py-2 rounded-xl bg-dark-950 border border-dark-800 text-xs text-white font-mono font-bold focus:border-cyber-pink outline-none"
-                      >
-                        {contexts.map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.icon} {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                      {/* TARGET CONTEXT SELECTOR */}
+                      <td className="px-6 py-4">
+                        <select
+                          value={item.contextId || ''}
+                          onChange={(e) => handleUpdateMapping(item.id, 'contextId', e.target.value)}
+                          className="px-3.5 py-2 rounded-xl bg-dark-950 border border-dark-800 text-xs text-white font-mono font-bold focus:border-cyber-pink outline-none"
+                        >
+                          {contexts.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.icon} {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
 
-                    {/* DESIGN DNA INPUT */}
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        value={item.designDna || ''}
-                        onChange={(e) => handleUpdateMapping(item.id, 'designDna', e.target.value)}
-                        className="px-3 py-1.5 rounded-lg bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-xs font-bold uppercase focus:border-cyber-purple outline-none"
-                      />
-                    </td>
+                      {/* DESIGN DNA INPUT */}
+                      <td className="px-6 py-4">
+                        <input
+                          type="text"
+                          value={item.designDna || ''}
+                          onChange={(e) => handleUpdateMapping(item.id, 'designDna', e.target.value)}
+                          className="px-3 py-1.5 rounded-lg bg-dark-950 border border-cyber-purple/40 text-cyber-purple font-mono text-xs font-bold uppercase focus:border-cyber-purple outline-none"
+                        />
+                      </td>
 
-                    {/* ACTIONS */}
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 transition-colors"
-                        title="Delete Vector Mapping"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {/* ACTIONS */}
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 transition-colors"
+                          title="Delete Vector Mapping"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

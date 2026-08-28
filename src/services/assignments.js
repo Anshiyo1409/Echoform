@@ -16,7 +16,7 @@ export function getAssignmentByTeamId(teamId) {
 
   let asg = assignments.find(a => a.teamId === teamId);
 
-  // If no assignment exists for this team, generate one from CURATED_CHALLENGES
+  // If no assignment exists for this team, generate one
   if (!asg) {
     const teamIdx = Math.abs(hashCode(teamId)) % CURATED_CHALLENGES.length;
     const vector = CURATED_CHALLENGES[teamIdx];
@@ -29,9 +29,8 @@ export function getAssignmentByTeamId(teamId) {
       assignedAt: new Date().toISOString(),
       sound: {
         id: `snd-${teamIdx + 1}`,
-        name: vector.soundName,
-        synthType: vector.synthType,
-        description: `Audio vector for ${vector.contextName} emphasizing ${vector.designDna}.`,
+        name: `Audio Track ${teamIdx + 1}`,
+        description: `Custom audio track for ${vector.contextName} emphasizing ${vector.designDna}.`,
         designDna: vector.designDna
       },
       context: {
@@ -77,7 +76,7 @@ export function getAssignmentByTeamId(teamId) {
     const teamIdx = Math.abs(hashCode(teamId)) % CURATED_CHALLENGES.length;
     const vector = CURATED_CHALLENGES[teamIdx];
     if (!sound) {
-      sound = { id: `snd-${teamIdx + 1}`, name: vector.soundName, synthType: vector.synthType, designDna: vector.designDna };
+      sound = { id: `snd-${teamIdx + 1}`, name: `Audio Track ${teamIdx + 1}`, designDna: vector.designDna };
     }
     if (!context) {
       context = { id: `ctx-${teamIdx + 1}`, name: vector.contextName, icon: vector.icon, designDna: vector.designDna };
