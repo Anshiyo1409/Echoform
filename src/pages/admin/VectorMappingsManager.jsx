@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { getVectorMappings, saveVectorMapping, createVectorMapping, deleteVectorMapping, resetVectorMappingsToDefault } from '../../services/vectorMappings';
-import { getSounds, createMultipleSounds, createSound } from '../../services/sounds';
+import { getSounds, createMultipleSounds, createSound, deleteAllSounds } from '../../services/sounds';
 import { getContexts } from '../../services/contexts';
-import { Headphones, Target, Dna, Upload, Play, Pause, Plus, Trash2, Check, RefreshCw, Layers, Sparkles, Edit3, X } from 'lucide-react';
+import { Headphones, Target, Dna, Upload, Play, Pause, Plus, Trash2, Check, RefreshCw, Layers, Sparkles, Edit3, X, AlertTriangle } from 'lucide-react';
 import { playSynthSound, stopSynthSound } from '../../audio/soundSynth';
 import NotificationToast from '../../components/NotificationToast';
 
@@ -137,7 +137,6 @@ export default function VectorMappingsManager() {
 
     const selectedCtx = contexts.find(c => c.id === newVector.contextId) || contexts[0];
 
-    // Create sound entry
     const createdSound = await createSound({
       name: newVector.soundName,
       audioUrl: newVector.audioUrl,
@@ -167,6 +166,16 @@ export default function VectorMappingsManager() {
       deleteVectorMapping(id);
       setMappings(getVectorMappings());
       setToast({ type: 'success', message: 'Vector pair deleted' });
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (window.confirm('⚠️ ARE YOU SURE? This will DELETE ALL uploaded audio tracks and clear all mappings at once. This action cannot be undone.')) {
+      await deleteAllSounds();
+      resetVectorMappingsToDefault();
+      setSounds([]);
+      setMappings([]);
+      setToast({ type: 'success', message: 'All uploaded audios and mappings deleted permanently.' });
     }
   };
 
@@ -206,6 +215,17 @@ export default function VectorMappingsManager() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {sounds.length > 0 && (
+              <button
+                onClick={handleDeleteAll}
+                className="px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-outfit font-bold text-xs flex items-center gap-1.5 hover:bg-rose-500/20 transition-all"
+                title="Delete All Uploaded Audios at once"
+              >
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                Delete All Audios
+              </button>
+            )}
+
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-purple text-dark-950 font-outfit font-bold text-xs flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
@@ -218,9 +238,16 @@ export default function VectorMappingsManager() {
 
         {/* BULK UPLOAD DROPZONE */}
         <div className="bg-dark-950 border border-cyber-purple/40 rounded-2xl p-6 space-y-3">
-          <div className="flex items-center gap-2">
-            <Upload className="w-5 h-5 text-cyber-purple" />
-            <h3 className="font-outfit font-bold text-base text-white">Upload Your Audio Files (Bulk Upload)</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Upload className="w-5 h-5 text-cyber-purple" />
+              <h3 className="font-outfit font-bold text-base text-white">Upload Your Audio Files (Bulk Upload)</h3>
+            </div>
+            {sounds.length > 0 && (
+              <span className="text-xs font-mono text-slate-400">
+                Audios Loaded: <strong className="text-cyber-cyan">{sounds.length}</strong>
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-400 font-mono">
             Select your <code>.mp3</code>, <code>.wav</code>, or <code>.m4a</code> audio files from your computer. Every audio track will be saved directly and listed below for context mapping!
@@ -308,9 +335,14 @@ export default function VectorMappingsManager() {
             <Layers className="w-5 h-5 text-cyber-cyan" />
             Uploaded Audio Mappings ({mappings.length})
           </h3>
-          <span className="text-xs font-mono text-slate-400">
-            Every uploaded track is paired with Context & Design DNA
-          </span>
+          {mappings.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              className="px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono font-bold flex items-center gap-1.5 hover:bg-rose-500/20"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Clear All Audios
+            </button>
+          )}
         </div>
 
         {mappings.length === 0 ? (

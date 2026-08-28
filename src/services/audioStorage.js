@@ -75,3 +75,19 @@ export async function deleteAudioFromDB(id) {
     return false;
   }
 }
+
+export async function clearAllAudioFromDB() {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.clear();
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  } catch (err) {
+    console.error('Error clearing audio assets from IndexedDB:', err);
+    return false;
+  }
+}

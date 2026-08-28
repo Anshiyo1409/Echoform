@@ -1,5 +1,5 @@
 import { getItem, setItem, KEYS } from './storage';
-import { saveAudioToDB, getAudioFromDB, deleteAudioFromDB } from './audioStorage';
+import { saveAudioToDB, getAudioFromDB, deleteAudioFromDB, clearAllAudioFromDB } from './audioStorage';
 
 export function getSounds() {
   const sounds = getItem(KEYS.SOUNDS) || [];
@@ -31,20 +31,17 @@ export async function createSound(soundData) {
   const isBase64 = rawAudioUrl.startsWith('data:audio/');
 
   if (isBase64) {
-    // Store heavy audio stream in IndexedDB
     await saveAudioToDB(soundId, rawAudioUrl);
   }
 
-  // Create lightweight metadata for localStorage to avoid 5MB quota limit
   const newSound = {
     id: soundId,
     name: soundData.name,
     description: soundData.description || '',
-    // If base64, save identifier marker in localStorage; full data lives in IndexedDB
     audioUrl: isBase64 ? `[IDB]:${soundId}` : rawAudioUrl,
     synthType: soundData.synthType || soundData.name,
     designDna: soundData.designDna || null,
-    isCustom: !!rawAudioUrl,
+    isCustom: true,
     hasIdbAudio: isBase64,
     active: true,
     createdAt: new Date().toISOString()
@@ -53,7 +50,6 @@ export async function createSound(soundData) {
   sounds.push(newSound);
   setItem(KEYS.SOUNDS, sounds);
 
-  // Return sound object with original audioUrl attached in memory
   return {
     ...newSound,
     audioUrl: rawAudioUrl
@@ -128,5 +124,11 @@ export async function deleteSound(soundId) {
   const filtered = sounds.filter(s => s.id !== soundId);
   await deleteAudioFromDB(soundId);
   setItem(KEYS.SOUNDS, filtered);
+  return true;
+}
+
+export async function deleteAllSounds() {
+  await clearAllAudioFromDB();
+  setItem(KEYS.SOUNDS, []);
   return true;
 }

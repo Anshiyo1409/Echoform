@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getSounds, createSound, createMultipleSounds, updateSound, deleteSound } from '../../services/sounds';
+import { getSounds, createSound, createMultipleSounds, updateSound, deleteSound, deleteAllSounds } from '../../services/sounds';
 import { Headphones, Plus, Play, Pause, Trash2, Upload, Link, Radio, Dna, FileAudio, Edit3, Check, X, Layers, RefreshCw } from 'lucide-react';
 import { playSynthSound, stopSynthSound } from '../../audio/soundSynth';
 import NotificationToast from '../../components/NotificationToast';
@@ -15,6 +15,16 @@ export default function SoundsManager() {
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [toast, setToast] = useState(null);
+
+  const handleDeleteAll = async () => {
+    if (window.confirm('⚠️ ARE YOU SURE? This will DELETE ALL uploaded audio tracks permanently. This action cannot be undone.')) {
+      stopSynthSound();
+      setPlayingId(null);
+      await deleteAllSounds();
+      setSounds([]);
+      setToast({ type: 'success', message: 'All audio tracks deleted permanently.' });
+    }
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -211,6 +221,17 @@ export default function SoundsManager() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {sounds.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-xs flex items-center gap-1.5 hover:bg-rose-500/20 transition-all shadow-lg"
+              title="Delete all uploaded audio tracks"
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              Delete All Audios
+            </button>
+          )}
+
           <button
             onClick={() => setShowBulkUpload(!showBulkUpload)}
             className="px-4 py-2 rounded-xl bg-dark-950 border border-cyber-pink/50 text-cyber-pink font-bold text-xs flex items-center gap-2 hover:bg-cyber-pink/10 transition-all shadow-lg"
