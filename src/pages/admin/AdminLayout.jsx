@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ShieldAlert, LayoutDashboard, DoorOpen, Users, Headphones, Target, Shuffle, FileCheck, Settings, LogOut, Radio } from 'lucide-react';
+import { ShieldAlert, LayoutDashboard, DoorOpen, Users, Headphones, Target, Shuffle, FileCheck, Settings, LogOut, Radio, Layers } from 'lucide-react';
 
 export default function AdminLayout() {
   const { currentUser, logout } = useAuth();
@@ -133,6 +133,17 @@ export default function AdminLayout() {
         >
           <Shuffle className="w-4 h-4 text-cyber-cyan" />
           Assignments & Lock
+        </Link>
+        <Link
+          to="/admin/mappings"
+          className={`px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shrink-0 transition-colors ${
+            isActive('/admin/mappings')
+              ? 'bg-cyber-purple text-white shadow-md'
+              : 'bg-dark-900 border border-dark-800 text-slate-400 hover:text-white'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-cyber-pink" />
+          Vector Mappings
         </Link>
         <Link
           to="/admin/submissions"

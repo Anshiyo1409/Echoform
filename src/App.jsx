@@ -21,6 +21,7 @@ import TeamsManager from './pages/admin/TeamsManager';
 import SoundsManager from './pages/admin/SoundsManager';
 import ContextsManager from './pages/admin/ContextsManager';
 import AssignmentsManager from './pages/admin/AssignmentsManager';
+import VectorMappingsManager from './pages/admin/VectorMappingsManager';
 import SubmissionsManager from './pages/admin/SubmissionsManager';
 import EventSettings from './pages/admin/EventSettings';
 
@@ -53,6 +54,7 @@ export default function App() {
                 <Route path="sounds" element={<SoundsManager />} />
                 <Route path="contexts" element={<ContextsManager />} />
                 <Route path="assignments" element={<AssignmentsManager />} />
+                <Route path="mappings" element={<VectorMappingsManager />} />
                 <Route path="submissions" element={<SubmissionsManager />} />
                 <Route path="settings" element={<EventSettings />} />
               </Route>
