@@ -5,6 +5,7 @@ let audioCtx = null;
 let currentNodes = [];
 let isPlaying = false;
 let currentSoundId = null;
+let currentAudioElement = null;
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -18,6 +19,13 @@ function getAudioContext() {
 }
 
 export function stopSynthSound() {
+  if (currentAudioElement) {
+    try {
+      currentAudioElement.pause();
+      currentAudioElement.currentTime = 0;
+    } catch (e) {}
+    currentAudioElement = null;
+  }
   if (currentNodes.length > 0) {
     currentNodes.forEach(node => {
       try {
@@ -43,15 +51,49 @@ function createNoiseBuffer(ctx, duration = 5) {
   return buffer;
 }
 
-export function playSynthSound(soundType, volume = 0.7, onFrameCallback = null) {
+export function playSynthSound(soundInput, volume = 0.7, onFrameCallback = null) {
   stopSynthSound();
+
+  let customUrl = null;
+  let key = '';
+
+  if (typeof soundInput === 'object' && soundInput !== null) {
+    customUrl = soundInput.audioUrl || null;
+    key = (soundInput.synthType || soundInput.name || '').toLowerCase();
+  } else if (typeof soundInput === 'string') {
+    if (
+      soundInput.startsWith('data:audio/') ||
+      soundInput.startsWith('http://') ||
+      soundInput.startsWith('https://') ||
+      soundInput.startsWith('blob:')
+    ) {
+      customUrl = soundInput;
+    } else {
+      key = soundInput.toLowerCase();
+    }
+  }
+
+  if (customUrl) {
+    isPlaying = true;
+    currentSoundId = 'custom_audio';
+    try {
+      const audio = new Audio(customUrl);
+      audio.volume = Math.max(0, Math.min(1, volume));
+      audio.loop = true;
+      audio.play().catch(err => console.warn('Custom audio playback error:', err));
+      currentAudioElement = audio;
+      return audio;
+    } catch (err) {
+      console.warn('Failed to play custom audio, falling back to synth:', err);
+    }
+  }
+
   const ctx = getAudioContext();
   const masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(volume, ctx.currentTime);
   masterGain.connect(ctx.destination);
   currentNodes.push(masterGain);
 
-  const key = (soundType || '').toLowerCase();
   isPlaying = true;
   currentSoundId = key;
 

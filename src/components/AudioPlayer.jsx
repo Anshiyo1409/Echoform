@@ -15,13 +15,15 @@ export default function AudioPlayer({ sound, isAdmin = false }) {
   const soundDesc = isAdmin ? (sound?.description || 'Heavy rain with distant traffic ambient noise') : 'Audio title is hidden. Play & listen to the procedural soundscape to interpret your vector.';
   const synthType = sound?.synthType || sound?.name || 'Rain + Traffic';
 
+  const soundTarget = sound || synthType;
+
   const togglePlay = () => {
     if (playing) {
       stopSynthSound();
       setPlaying(false);
       if (timerRef.current) clearInterval(timerRef.current);
     } else {
-      playSynthSound(synthType, muted ? 0 : volume);
+      playSynthSound(soundTarget, muted ? 0 : volume);
       setPlaying(true);
       
       timerRef.current = setInterval(() => {
@@ -36,7 +38,7 @@ export default function AudioPlayer({ sound, isAdmin = false }) {
       togglePlay();
     } else {
       stopSynthSound();
-      playSynthSound(synthType, muted ? 0 : volume);
+      playSynthSound(soundTarget, muted ? 0 : volume);
     }
   };
 
@@ -47,7 +49,7 @@ export default function AudioPlayer({ sound, isAdmin = false }) {
     else setMuted(false);
 
     if (playing) {
-      playSynthSound(synthType, val);
+      playSynthSound(soundTarget, val);
     }
   };
 
@@ -55,7 +57,7 @@ export default function AudioPlayer({ sound, isAdmin = false }) {
     const nextMute = !muted;
     setMuted(nextMute);
     if (playing) {
-      playSynthSound(synthType, nextMute ? 0 : volume);
+      playSynthSound(soundTarget, nextMute ? 0 : volume);
     }
   };
 

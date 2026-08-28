@@ -39,7 +39,7 @@ export default function ChallengeReveal() {
         // move to Sound Reveal
         timer = setTimeout(() => {
           setStep(3);
-          playSynthSound(assignment?.sound?.synthType || soundName, 0.6);
+          playSynthSound(assignment?.sound || soundName, 0.6);
         }, 900);
       }
     }

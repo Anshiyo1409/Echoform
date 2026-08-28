@@ -22,7 +22,7 @@ export default function ChallengeCard({ sound, context, team, interactive = fals
       stopSynthSound();
       setIsPlaying(false);
     } else {
-      playSynthSound(synthType, 0.8);
+      playSynthSound(sound || synthType, 0.8);
       setIsPlaying(true);
     }
   };

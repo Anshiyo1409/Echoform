@@ -16,6 +16,7 @@ export function createContext(contextData) {
     name: contextData.name,
     icon: contextData.icon || '🎯',
     description: contextData.description || '',
+    designDna: contextData.designDna || 'SONIC TEXTURE',
     active: true,
     createdAt: new Date().toISOString()
   };

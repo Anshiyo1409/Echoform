@@ -16,8 +16,33 @@ export function getAssignmentByTeamId(teamId) {
   const asg = assignments.find(a => a.teamId === teamId);
   if (!asg) return null;
 
-  const sound = soundList.find(s => s.id === asg.soundId);
-  const context = contextList.find(c => c.id === asg.contextId);
+  let sound = soundList.find(s => s.id === asg.soundId);
+  let context = contextList.find(c => c.id === asg.contextId);
+
+  // Apply custom sound override if present
+  if (asg.customSound) {
+    sound = {
+      ...(sound || {}),
+      ...asg.customSound
+    };
+  }
+
+  // Apply custom context override if present
+  if (asg.customContext) {
+    context = {
+      ...(context || {}),
+      ...asg.customContext
+    };
+  }
+
+  // Apply custom design DNA override if present
+  if (asg.customDesignDna) {
+    if (context) {
+      context = { ...context, designDna: asg.customDesignDna };
+    } else {
+      context = { name: 'Custom Context', designDna: asg.customDesignDna, icon: '🎯' };
+    }
+  }
 
   return {
     ...asg,
@@ -48,21 +73,28 @@ export function generateAndSaveAssignments() {
   return newAssignments;
 }
 
-export function updateSingleAssignment(teamId, soundId, contextId) {
+export function updateSingleAssignment(teamId, soundId, contextId, customOverrides = null) {
   const assignments = getAssignments();
   const index = assignments.findIndex(a => a.teamId === teamId);
+  
+  const payload = {
+    soundId,
+    contextId,
+    customSound: customOverrides?.customSound || null,
+    customContext: customOverrides?.customContext || null,
+    customDesignDna: customOverrides?.customDesignDna || null
+  };
+
   if (index !== -1) {
     assignments[index] = {
       ...assignments[index],
-      soundId,
-      contextId
+      ...payload
     };
   } else {
     assignments.push({
       id: `asg-${teamId}`,
       teamId,
-      soundId,
-      contextId,
+      ...payload,
       revealed: false,
       revealedAt: null,
       assignedAt: new Date().toISOString()

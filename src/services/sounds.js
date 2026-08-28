@@ -17,6 +17,8 @@ export function createSound(soundData) {
     description: soundData.description || '',
     audioUrl: soundData.audioUrl || '',
     synthType: soundData.synthType || soundData.name,
+    designDna: soundData.designDna || null,
+    isCustom: !!soundData.audioUrl,
     active: true,
     createdAt: new Date().toISOString()
   };
